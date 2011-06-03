@@ -56,12 +56,13 @@ var SlidingPuzzle = (function () {
         _isNumbersShown = true,
         _colSpacing, _rowSpacing,
         _sqWidth, _sqHeight,
-        _isPositionStatic,
         _getTop = function (y) {
-            return (_isPositionStatic? _gameTop: 0) + y*(_sqHeight +_rowSpacing) - _sqHeight + (y<=_yResidual?y-1:_yResidual);
+            return _topOffset + y*(_sqHeight +_rowSpacing)
+                - _sqHeight + (y<=_yResidual?y-1:_yResidual);
         },
         _getLeft = function (x) {
-            return (_isPositionStatic? _gameLeft: 0) + x*(_sqWidth+_colSpacing)  - _sqWidth + (x<=_xResidual?x-1:_xResidual);
+            return _leftOffset + x*(_sqWidth+_colSpacing)
+                - _sqWidth + (x<=_xResidual?x-1:_xResidual);
         },
         _getWidth = function (x) {
             return _sqWidth + (x<=_xResidual?1:0);
@@ -70,31 +71,38 @@ var SlidingPuzzle = (function () {
             return _sqHeight + (y<=_yResidual?1:0);
         },
         init = function () {
-            var x, y, id, sq, k;
+            var x, y, id, sq, k, topBorderWidth, topBorderLeft;
             if (_$gameDiv.length===0) {
                 throw {message:'No such div "'+div+'"'};
             }
-            _backgroundImage = _$gameDiv.css('background-image');
-            _gameTop = _$gameDiv.offset().top;
-            _gameLeft = _$gameDiv.offset().left;
-            _isPositionStatic = _$gameDiv.css('position')==='static';
             options = options || {};
-            _image = options.image || '';
-            _colSpacing = typeof options.colSpacing === 'number' && isFinite(options.colSpacing)? options.colSpacing: 0;
-            _rowSpacing = typeof options.rowSpacing === 'number' && isFinite(options.rowSpacing)? options.rowSpacing: 0;
             _cols = options.cols || 4;
             if (_cols<2) {
-                throw {message:'At least 2 columns must are required'};
+                throw {message:'At least 2 columns are required'};
             }
             _rows = options.rows || 4;
             if (_rows<2) {
                 throw {message:'At least 2 rows are required'};
             }
             _spare = {x:_cols, y:_rows};
+            _image = options.image || '';
+            _colSpacing = typeof options.colSpacing === 'number' &&
+                isFinite(options.colSpacing)? options.colSpacing: 0;
+            _rowSpacing = typeof options.rowSpacing === 'number' &&
+                isFinite(options.rowSpacing)? options.rowSpacing: 0;
             _xResidual = (_$gameDiv.width() - (_cols+1)*_colSpacing) % _cols;
             _yResidual = (_$gameDiv.height() - (_rows+1)*_rowSpacing) % _rows;
             _sqWidth = parseInt((_$gameDiv.width() - (_cols+1)*_colSpacing)/_cols);
             _sqHeight = parseInt((_$gameDiv.height() - (_rows+1)*_rowSpacing)/_rows);
+            _backgroundImage = _$gameDiv.css('background-image');
+            _gameTop = _$gameDiv.offset().top;
+            _gameLeft = _$gameDiv.offset().left;
+            topBorderWidth = parseInt(_$gameDiv.css('border-top-width'));
+            topBorderWidth = isNaN(topBorderWidth)? 0: topBorderWidth;
+            _topOffset = (_$gameDiv.css('position')==='static'? _gameTop: 0) + topBorderWidth;
+            topBorderLeft = parseInt(_$gameDiv.css('border-left-width'));
+            topBorderLeft = isNaN(topBorderLeft)? 0: topBorderLeft;
+            _leftOffset = (_$gameDiv.css('position')==='static'? _gameLeft: 0) + topBorderLeft;
 
             id = 0;
             for (y=1; y<=_rows; y++) {
@@ -181,8 +189,8 @@ var SlidingPuzzle = (function () {
                                  'left': _getLeft(x),
                                  'top': _getTop(y),
                                  'background-image': _image,
-                                 'background-position-x': -1*_getLeft(x)+(_isPositionStatic?_gameLeft:0),
-                                 'background-position-y': -1*_getTop(y)+(_isPositionStatic?_gameTop:0)});
+                                 'background-position-x': -1*_getLeft(x)+_leftOffset,
+                                 'background-position-y': -1*_getTop(y)+_topOffset});
                 _$numberDiv = _$squareDiv.children().filter(':first');
                 _$numberDiv.css({'font-size': '1px',
                                  'margin': '10px'});
