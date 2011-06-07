@@ -1,4 +1,4 @@
-var SlidingPuzzle = (function () {
+var Puzzle = (function () {
     var countInversions = function (array) {
         var orderArray = [];
         function _countInversions (first, last) {
@@ -41,333 +41,346 @@ var SlidingPuzzle = (function () {
         }
         return _countInversions(0, array.length);
     },
-    SlidingPuzzle = function (div, options) {
+    Puzzle = function ($container, options) {
         // private members
-        var _spare = {},
-        _gameTop, _gameLeft,
-        _squares = [],
-        _squareAt = [],
-        _game = this,
-        _$gameDiv = $('#'+div),
-        _incompletes = 0,
-        _cols, _rows,
-        _image, _backgroundImage,
-        _isOriginalShown = false,
-        _isNumbersShown = true,
-        _colSpacing, _rowSpacing,
+        var _thisPuzzle = this,
+        _spare,
+        _squares,_squareAt,
+        _$container, _$carpet,
+        _incompletes,
+        _image,
         _sqWidth, _sqHeight,
+        _xResidual, _yResidual,
+        // default values
+        _cols=4, _rows=4,
+        _spacing=0,
+        _bindings = {};
+        // private methods
         _getTop = function (y) {
-            return _topOffset + y*(_sqHeight +_rowSpacing)
-                - _sqHeight + (y<=_yResidual?y-1:_yResidual);
+            return y*(_sqHeight +_spacing) - _spacing - _sqHeight + (y<=_yResidual?y-1:_yResidual);
         },
         _getLeft = function (x) {
-            return _leftOffset + x*(_sqWidth+_colSpacing)
-                - _sqWidth + (x<=_xResidual?x-1:_xResidual);
+            return x*(_sqWidth+_spacing) - _spacing - _sqWidth + (x<=_xResidual?x-1:_xResidual);
         },
         _getWidth = function (x) {
             return _sqWidth + (x<=_xResidual?1:0);
         },
         _getHeight = function (y) {
             return _sqHeight + (y<=_yResidual?1:0);
-        },
-        init = function () {
-            var x, y, id, sq, k, topBorderWidth, topBorderLeft;
-            if (_$gameDiv.length===0) {
-                throw {message:'No such div "'+div+'"'};
+        };
+        // public members
+        _thisPuzzle.CLASS_NAME = 'Puzzle';
+        _thisPuzzle.$ = function () {
+            if (arguments.length>0 && arguments[0]!==undefined) {
+                _$container = $(arguments[0]);
+                _thisPuzzle.redraw();
+            }
+            return _$container;
+        };
+        _thisPuzzle.cols = function () {
+            if (arguments.length>0 && arguments[0]!==undefined) {
+                _thisPuzzle.setPuzzle({cols:arguments[0]});
+            }
+            return _cols;
+        };
+        _thisPuzzle.rows = function () {
+            if (arguments.length>0 && arguments[0]!==undefined) {
+                _thisPuzzle.setPuzzle({rows:arguments[0]});
+            }
+            return _rows;
+        };
+        _thisPuzzle.image = function () {
+            if (arguments.length>0 && arguments[0]!==undefined) {
+                _thisPuzzle.setPuzzle({image:arguments[0]});
+            }
+            return _image;
+        };
+        _thisPuzzle.redraw = function () {
+            _$carpet.height(_$container.height());
+            _$carpet.width(_$container.width());
+            _thisPuzzle.setPuzzle();
+        };
+        _thisPuzzle.setPuzzle = function () {
+            var $container, spacing, image, cols, rows,
+            render=false, buildSquares=false,
+            xResidual, yResidual,
+            sqWidth, sqHeight,
+            x,y,e,sq,id=0;
+
+            if (arguments.length===1) {
+                options = arguments[0];
+                $container = options.container || _$container;
+            } else if (arguments.length>1) {
+                $container = arguments[0];
+                options = arguments[1];
+            } else {
+                $container = _$container;
+            }
+            if (!$container) {
+                throw {message: 'container is missing'};
             }
             options = options || {};
-            _cols = options.cols || 4;
-            if (_cols<2) {
-                throw {message:'At least 2 columns are required'};
+            spacing = options.spacing===undefined? _spacing : options.spacing;
+            if (!(spacing>=0)) {
+                throw {message:'spacing must be non-negative integer'};
             }
-            _rows = options.rows || 4;
-            if (_rows<2) {
-                throw {message:'At least 2 rows are required'};
+            image = options.image===undefined? _image : options.image;
+            if (!(image===undefined || typeof image === 'string')) {
+                throw {message: 'image must be a string'};
             }
-            _spare = {x:_cols, y:_rows};
-            _image = options.image || '';
-            _colSpacing = typeof options.colSpacing === 'number' &&
-                isFinite(options.colSpacing)? options.colSpacing: 0;
-            _rowSpacing = typeof options.rowSpacing === 'number' &&
-                isFinite(options.rowSpacing)? options.rowSpacing: 0;
-            _xResidual = (_$gameDiv.width() - (_cols+1)*_colSpacing) % _cols;
-            _yResidual = (_$gameDiv.height() - (_rows+1)*_rowSpacing) % _rows;
-            _sqWidth = parseInt((_$gameDiv.width() - (_cols+1)*_colSpacing)/_cols);
-            _sqHeight = parseInt((_$gameDiv.height() - (_rows+1)*_rowSpacing)/_rows);
-            _backgroundImage = _$gameDiv.css('background-image');
-            _gameTop = _$gameDiv.offset().top;
-            _gameLeft = _$gameDiv.offset().left;
-            topBorderWidth = parseInt(_$gameDiv.css('border-top-width'));
-            topBorderWidth = isNaN(topBorderWidth)? 0: topBorderWidth;
-            _topOffset = (_$gameDiv.css('position')==='static'? _gameTop: 0) + topBorderWidth;
-            topBorderLeft = parseInt(_$gameDiv.css('border-left-width'));
-            topBorderLeft = isNaN(topBorderLeft)? 0: topBorderLeft;
-            _leftOffset = (_$gameDiv.css('position')==='static'? _gameLeft: 0) + topBorderLeft;
+            cols = options.cols===undefined? _cols : options.cols;
+            if (!(cols>1)) {
+                throw {message:'at least 2 columns are required'};
+            }
+            rows = options.rows===undefined? _rows : options.rows;
+            if (!(rows>1)) {
+                throw {message:'at least 2 rows are required'};
+            }
+            if (spacing!==_spacing) {
+                _spacing = spacing;
+                render = true;
+            }
+            if (image!==_image) {
+                _image = image;
+                render = true;
+            }
+            if ($container!==_$container) {
+                if (_$container) {
+                    _$container.empty();
+                }
+                _$container = $container;
+                _$container.append('<div style="position:relative; margin:0"></div>');
+                _$carpet = _$container.children().filter(':last');
+                _$carpet.height(_$container.height());
+                _$carpet.width(_$container.width());
+                buildSquares = true;
+            }
+            if (rows!==_rows || cols!==_cols) {
+                _rows = rows;
+                _cols = cols;
+                buildSquares = true;
+            }
+            xResidual = (_$carpet.width() - (_cols-1)*_spacing) % _cols;
+            yResidual = (_$carpet.height() - (_rows-1)*_spacing) % _rows;
+            sqWidth = parseInt((_$carpet.width() - (_cols-1)*_spacing)/_cols);
+            sqHeight = parseInt((_$carpet.height() - (_rows-1)*_spacing)/_rows);
+            if (xResidual!==_xResidual || yResidual!==_yResidual ||
+                sqWidth!==_sqWidth || sqHeight!==_sqHeight) {
+                _xResidual = xResidual;
+                _yResidual = yResidual;
+                _sqWidth = sqWidth;
+                _sqHeight = sqHeight;
+                render = true;
+            }
+            if (buildSquares) {
+                _spare = {x:_cols, y:_rows};
+                _squares = [];
+                _squareAt = [];
+                _incompletes = 0;
+                _$carpet.empty();
 
-            id = 0;
-            for (y=1; y<=_rows; y++) {
-                _squareAt[y] = [];
-                for (x=1; x<=_cols; x++) {
-                    id += 1;
-                    _squareAt[y][x] = [];
-                    if (!(_spare.y===y && _spare.x===x)) {
-                        sq = new _game.Square(x, y, id);
-                        _squares.push(sq);
-                        _squareAt[y][x].push(sq);
+                for (y=1; y<=_rows; y++) {
+                    _squareAt[y] = [];
+                    for (x=1; x<=_cols; x++) {
+                        id += 1;
+                        _squareAt[y][x] = [];
+                        if (!(_spare.y===y && _spare.x===x)) {
+                            sq = new _thisPuzzle.Square(x, y, id);
+                            _squares.push(sq);
+                            _squareAt[y][x].push(sq);
+                        }
+                    }
+                }
+                if (_bindings) {
+                    for (e in _bindings) {
+                        _thisPuzzle.bindSquares(e, _bindings[e]);
                     }
                 }
             }
-            $(window).scroll(function () {_game.resize('scroll');});
-            $(window).resize(function () {_game.resize('resize');});
-        };
-        // public members
-        this.CLASS_NAME = 'SlidingPuzzle';
-        this.bindings = {};
-        this.resize = function (name) {
-            var offset = _$gameDiv.offset(),
-            topChanged = (offset.top!==_gameTop),
-            leftChanged = (offset.left!==_gameLeft),
-            getProperty;
-            if (topChanged || leftChanged || true) {
-                _gameTop = offset.top;
-                _gameLeft = offset.left;
-                getProperty = function (sq) {
-                    var property= {};
-                    if (leftChanged) {
-                        property.left = _getLeft(sq.x());
-                    }
-                    if (topChanged) {
-                        property.top = _getTop(sq.y());
-                    }
-                    return property;
-                };
-                _squares.map(function (sq) {
-                    sq.div().css(getProperty(sq));
-                });
+            else if (render) {
+                _squares.map(function (sq) {sq.render();});
             }
         };
-        this.div = function () {
-            return _$gameDiv;
-        };
-        this.cols = function () {
-            return _cols;
-        };
-        this.rows = function () {
-            return _rows;
-        };
-        this.squares = function (id) {
-            var squares;
+        _thisPuzzle.squares = function (id) {
             if (id) {
                 return _squares[id];
             } else {
-                for (var i in _squares) {
-                    squares[i] = _squares[i];
-                }
-                return squares;
+                return _squares;
             }
         };
-        this.squareAt = function (x,y) {
+        _thisPuzzle.squareAt = function (x,y) {
             return _squareAt[y][x];
         };
-        this.getSpare = function () {
-            return {x:_spare.x,
-                    y:_spare.y};
+        _thisPuzzle.getSpare = function () {
+            return {x:_spare.x, y:_spare.y};
         };
-        this.Square = function (x, y, id) {
-            var _square = this,
-            _$squareDiv, _$numberDiv,
-            _originalX = x, _originalY = y,
-            _squareX = x, _squareY = y,
-            _isNumberShown = true;
-
-            var init = function () {
-                _$gameDiv.append('<div><span>'+ id +'</span></div>');
-                _$squareDiv = _$gameDiv.children().filter(':last');
-                _$squareDiv.css({'position': 'absolute',
-                                 'width': _getWidth(x),
-                                 'height': _getHeight(y),
-                                 'left': _getLeft(x),
-                                 'top': _getTop(y),
-                                 'background-image': _image,
-                                 'background-position-x': -1*_getLeft(x)+_leftOffset,
-                                 'background-position-y': -1*_getTop(y)+_topOffset});
-                _$numberDiv = _$squareDiv.children().filter(':first');
-                _$numberDiv.css({'font-size': '1px',
-                                 'margin': '10px'});
+        _thisPuzzle.Square = function (x, y, id) {
+            var _thisSquare = this,
+            _id = id,
+            _$square,
+            _ox = x, _oy = y,   // original coordinates
+            _x = x, _y = y,     // current coordinates
+            init = function () {
+                _$carpet.append('<div></div>');
+                _$square = _$carpet.children().filter(':last');
+                _thisSquare.render();
             };
-
-            this.CLASS_NAME = 'SlidingPuzzle.Square';
-            this.div = function () {
-                return _$squareDiv;
+            _thisSquare.CLASS_NAME = 'Puzzle.Square';
+            _thisSquare.render = function () {
+                _$square.css({'position': 'absolute',
+                              'width': _getWidth(_x),
+                              'height': _getHeight(_y),
+                              'left': _getLeft(_x),
+                              'top': _getTop(_y),
+                              'background-image': _image,
+                              'background-position-x': -1*_getLeft(_ox),
+                              'background-position-y': -1*_getTop(_oy)});
             };
-            this.id = function () {
-                return id;
+            _thisSquare.$ = function () {
+                return _$square;
             };
-            this.x = function () {
-                return _squareX;
+            _thisSquare.id = function () {
+                return _id;
             };
-            this.y = function () {
-                return _squareY;
+            _thisSquare.x = function () {
+                return _x;
             };
-            this.movable = function () {
+            _thisSquare.y = function () {
+                return _y;
+            };
+            _thisSquare.ox = function () {
+                return _ox;
+            };
+            _thisSquare.oy = function () {
+                return _oy;
+            };
+            _thisSquare.movable = function () {
                 var movable = false;
-                if (_spare.x===_squareX) {
-                    if (_spare.y===_squareY-1 || _squareY===_spare.y-1) {
+                if (_spare.x===_x) {
+                    if (_spare.y===_y-1 || _y===_spare.y-1) {
                         movable = true;
                     }
-                } else if (_spare.y===_squareY) {
-                    if (_spare.x===_squareX-1 || _squareX===_spare.x-1) {
+                } else if (_spare.y===_y) {
+                    if (_spare.x===_x-1 || _x===_spare.x-1) {
                         movable = true;
                     }
                 }
                 return movable;
             };
-            this.move = function (x, y, overlap, duration, complete) {
+            _thisSquare.move = function (x, y, overlap, duration, complete) {
                 var index, square, property={};
                 overlap = overlap===undefined? false:overlap;
-                if (x===_squareX && y===_squareY) {
+                if (x===_x && y===_y) {
                     if (complete) {
-                        complete.apply(_square);
+                        complete.apply(_thisSquare);
                     }
-                    return this;
+                    return _thisSquare;
                 } else {
-                    if (x!==_squareX) {
+                    if (x!==_x) {
                         property.left = _getLeft(x);
                     }
-                    if (y!==_squareY) {
+                    if (y!==_y) {
                         property.top = _getTop(y);
                     }
-                    if (y<=_yResidual !== _squareY<=_yResidual) {
+                    if (y<=_yResidual !== _y<=_yResidual) {
                         property.height = _getHeight(y);
                     }
-                    if (x<=_xResidual !== _squareX<=_xResidual) {
+                    if (x<=_xResidual !== _x<=_xResidual) {
                         property.width = _getWidth(x);
                     }
                 }
-                index = _squareAt[_squareY][_squareX].indexOf(this);
-                square = _squareAt[_squareY][_squareX].splice(index,1)[0];
+                index = _squareAt[_y][_x].indexOf(_thisSquare);
+                square = _squareAt[_y][_x].splice(index,1)[0];
                 if (!overlap) {
-                    if (_game.isSpare(x, y)) {
-                        _spare.x = _squareX;
-                        _spare.y = _squareY;
+                    if (_thisPuzzle.isSpare(x, y)) {
+                        _spare.x = _x;
+                        _spare.y = _y;
                     } else if (_squareAt[y][x].length>0) {
-                        _squareAt[y][x][0].move(_squareX, _squareY, true);
+                        _squareAt[y][x][0].move(_x, _y, true);
                     }
                 }
                 _squareAt[y][x].push(square);
 
-                if (x === _originalX && y===_originalY) {
+                if (x === _ox && y===_oy) {
                     _incompletes--;
-                } else if (this.atOrigin()) {
+                } else if (_x===_ox && _y===_oy) {
                     _incompletes++;
                 }
-                _squareX = x;
-                _squareY = y;
-                _$squareDiv.animate(property, duration, function () {
+                _x = x;
+                _y = y;
+                _$square.animate(property, duration, function () {
                     if (complete) {
-                        complete.apply(_square);
+                        complete.apply(_thisSquare);
                     }
                 });
-                return this;
+                return _thisSquare;
             };
-            this.step = function (duration, complete) {
-                if (this.movable()) {
-                    this.move(_spare.x, _spare.y, false, duration, complete);
+            _thisSquare.step = function (duration, complete) {
+                if (_thisSquare.movable()) {
+                    _thisSquare.move(_spare.x, _spare.y, false, duration, complete);
                 }
             };
-            this.steps = function (duration, complete) {
+            _thisSquare.steps = function (duration, complete) {
                 var x, y, span, done=0,
                 move = function () {
                     _squareAt[y][x][0].move(_spare.x, _spare.y, false, duration,
                                             complete?
                                             function () {
                                                 if (++done===span) {
-                                                    complete.apply(_square);
+                                                    complete.apply(_thisSquare);
                                                 }
                                             }:undefined);
                 };
-                if (_spare.x===_squareX) {
-                    x = _squareX;
-                    if (_spare.y>_squareY) {
-                        span = _spare.y-_squareY;
-                        for (y=_spare.y-1; y>=_squareY; y--) {
+                if (_spare.x===_x) {
+                    x = _x;
+                    if (_spare.y>_y) {
+                        span = _spare.y-_y;
+                        for (y=_spare.y-1; y>=_y; y--) {
                             move();
                         }
                     } else {
-                        span = _squareY-_spare.y;
-                        for (y=_spare.y+1; y<=_squareY; y++) {
+                        span = _y-_spare.y;
+                        for (y=_spare.y+1; y<=_y; y++) {
                             move();
                         }
                     }
-                } else if (_spare.y===_squareY) {
-                    y = _squareY;
-                    if (_spare.x>_squareX) {
-                        span = _spare.x-_squareX;
-                        for (x=_spare.x-1; x>=_squareX; x--) {
+                } else if (_spare.y===_y) {
+                    y = _y;
+                    if (_spare.x>_x) {
+                        span = _spare.x-_x;
+                        for (x=_spare.x-1; x>=_x; x--) {
                             move();
                         }
                     } else {
-                        span = _squareX-_spare.x;
-                        for (x=_spare.x+1; x<=_squareX; x++) {
+                        span = _x-_spare.x;
+                        for (x=_spare.x+1; x<=_x; x++) {
                             move();
                         }
                     }
                 }
             };
-            this.reset = function (){
-                this.move(_originalX, _originalY);
-            };
-            this.atOrigin = function () {
-                return _squareX===_originalX && _squareY===_originalY;
-            };
-            this.isNumberShown = function () {
-                return _isNumberShown;
-            };
-            this.toggleNumber = function (duration) {
-                if (_isNumberShown) {
-                    this.hideNumber(duration);
-                } else {
-                    this.showNumber(duration);
-                }
-            };
-            this.showNumber = function (duration) {
-                if (!_isNumberShown) {
-                    _$numberDiv.fadeIn(duration);
-                    _isNumberShown = true;
-                }
-                return this;
-            };
-            this.hideNumber = function (duration) {
-                if (_isNumberShown) {
-                    _$numberDiv.fadeOut(duration);
-                    _isNumberShown = false;
-                }
-                return this;
-            };
-            this.bind = function (e, f) {
-                var that = this;
-                var helper = function () {
-                    f.apply(that);
-                };
-                _$squareDiv.bind(e, helper);
+            _thisSquare.bind = function (e, f) {
+                _$square.bind(e, function () {
+                    f.apply(_thisSquare);
+                });
             };
             init();
         };
-        this.shuffle = function (duration, complete) {
+        _thisPuzzle.shuffle = function (duration, complete) {
             var random = [], index,
             done = 0,
             movements = _squares.length,
             move = function (square) {
                 square.move(x, y, true, duration, function () {
                     if (++done===movements) {
-                        if (!_game.solvable()) {
+                        if (!_thisPuzzle.solvable()) {
                             _squares[0].move(_squares[1].x(),
                                              _squares[1].y(),
                                              false,
                                              duration,
                                              complete);
                         } else {
-                            complete.apply(_game);
+                            complete.apply(_thisPuzzle);
                         }
                     }
                 });
@@ -377,90 +390,34 @@ var SlidingPuzzle = (function () {
             _squares.map (function (sq) {random.push(sq);});
             for (y=1; y<=_rows; y++) {
                 for (x=1; x<=_cols; x++) {
-                    if (!_game.isSpare(x, y)) {
+                    if (!_thisPuzzle.isSpare(x, y)) {
                         index = Math.floor(Math.random()*random.length);
                         move(random.splice(index,1)[0]);
                     }
                 }
             }
         };
-        this.isComplete = function () {
+        _thisPuzzle.isComplete = function () {
             return _incompletes===0;
         };
-        this.resetSquares = function () {
-            _squares.map(function (sq) {
-                sq.reset();
-            });
-        };
-        this.isOriginalShown = function () {
-            return _isOriginalShown;
-        };
-        this.showSquares = function (duration) {
-            if (_isOriginalShown) {
-                _squares.map(function (sq) {
-                    sq.div().fadeIn(duration);
-                });
-                _$gameDiv.css('background-image', _backgroundImage);
-                _isOriginalShown = false;
-            }
-            return this;
-        };
-        this.showOriginal = function (duration) {
-            if (!_isOriginalShown) {
-                _squares.map(function (sq) {
-                    sq.div().hide(duration);
-                });
-                _$gameDiv.css('background-image', _image);
-                _isOriginalShown = true;
-            }
-            return this;
-        };
-        this.toggleOriginalShown = function (duration) {
-            if (_isOriginalShown) {
-                this.showSquares(duration);
-            } else {
-                this.showOriginal(duration);
-            }
-        };
-        this.showNumbers = function (duration) {
-            if (!_isNumbersShown) {
-                _isNumbersShown = true;
-                _squares.map(function (sq) {
-                    sq.showNumber(duration);
-                });
-            }
-        };
-        this.hideNumbers = function (duration) {
-            if (_isNumbersShown) {
-                _isNumbersShown = false;
-                _squares.map(function (sq) {
-                    sq.hideNumber(duration);
-                });
-            }
-        };
-        this.toggleNumbers = function () {
-            if (_isNumbersShown) {
-                this.hideNumbers();
-            } else {
-                this.showNumbers();
-            }
-        };
-        this.reset = function () {
-            this.resetSquares();
-        };
-        this.isSpare = function (x, y) {
+        _thisPuzzle.isSpare = function (x, y) {
             return x===_spare.x && y===_spare.y;
         };
-        this.bindSquares = function (e, f) {
-            _squares.map(function (sq) {sq.bind(e, f);});
+        _thisPuzzle.bindSquares = function (e, f) {
+            if (_squares) {
+                _squares.map(function (sq) {sq.bind(e, f);});
+                _bindings[e] = f;
+            }
         };
-        this.solvable = function () {
-            var x,y;
-            var row, array = [];
-            var inversions;
+        _thisPuzzle.unbindSquares = function (e, f) {
+            _squares.map(function (sq) {sq.unbind(e, f);});
+            delete _bindings[e];
+        }
+        _thisPuzzle.solvable = function () {
+            var x,y, row, array = [], inversions;
             for (y=1; y<=_rows; y++) {
                 for (x=1; x<=_cols; x++) {
-                    if (_game.isSpare(x, y)) {
+                    if (_thisPuzzle.isSpare(x, y)) {
                         row = _rows - y + 1;
                     } else {
                         if (_squareAt[y][x].length===1) {
@@ -481,7 +438,12 @@ var SlidingPuzzle = (function () {
                 return false;
             }
         };
-        init();
+        _thisPuzzle.reset = function () {
+            _squares.map(function (sq) {
+                sq.move(sq.ox(), sq.oy());
+            })
+        };
+        _thisPuzzle.setPuzzle($container, options);
     };
-    return SlidingPuzzle;
+    return Puzzle;
 })();
