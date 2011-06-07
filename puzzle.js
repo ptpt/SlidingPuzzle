@@ -367,23 +367,21 @@ var Puzzle = (function () {
             init();
         };
         _thisPuzzle.shuffle = function (duration, complete) {
-            var random = [], index,
+            var x,y,random = [], index,
             done = 0,
             movements = _squares.length,
-            move = function (square) {
-                square.move(x, y, true, duration, function () {
-                    if (++done===movements) {
-                        if (!_thisPuzzle.solvable()) {
-                            _squares[0].move(_squares[1].x(),
-                                             _squares[1].y(),
-                                             false,
-                                             duration,
-                                             complete);
-                        } else {
-                            complete.apply(_thisPuzzle);
-                        }
+            callback = function () {
+                if (++done===movements) {
+                    if (!_thisPuzzle.solvable()) {
+                        _squares[0].move(_squares[1].x(),
+                                         _squares[1].y(),
+                                         false,
+                                         duration,
+                                         complete);
+                    } else {
+                        complete.apply(_thisPuzzle);
                     }
-                });
+                }
             };
             _spare.x = _cols;
             _spare.y = _rows;
@@ -392,7 +390,7 @@ var Puzzle = (function () {
                 for (x=1; x<=_cols; x++) {
                     if (!_thisPuzzle.isSpare(x, y)) {
                         index = Math.floor(Math.random()*random.length);
-                        move(random.splice(index,1)[0]);
+                        random.splice(index,1)[0].move(x, y, true, duration, callback);
                     }
                 }
             }
