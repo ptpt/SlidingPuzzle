@@ -54,7 +54,7 @@ var Puzzle = (function () {
         // default values
         _cols=4, _rows=4,
         _spacing=0,
-        _bindings = {};
+        _bindings = {},
         // private methods
         _getTop = function (y) {
             return y*(_sqHeight +_spacing) - _spacing - _sqHeight + (y<=_yResidual?y-1:_yResidual);
@@ -70,28 +70,28 @@ var Puzzle = (function () {
         };
         // public members
         _thisPuzzle.CLASS_NAME = 'Puzzle';
-        _thisPuzzle.$ = function () {
-            if (arguments.length>0 && arguments[0]!==undefined) {
-                _$container = $(arguments[0]);
+        _thisPuzzle.$ = function (selector) {
+            if (arguments.length>0 && selector!==undefined) {
+                _$container = $(selector);
                 _thisPuzzle.redraw();
             }
             return _$container;
         };
-        _thisPuzzle.cols = function () {
-            if (arguments.length>0 && arguments[0]!==undefined) {
-                _thisPuzzle.setPuzzle({cols:arguments[0]});
+        _thisPuzzle.cols = function (cols) {
+            if (arguments.length>0 && cols!==undefined) {
+                _thisPuzzle.setPuzzle({cols: cols});
             }
             return _cols;
         };
-        _thisPuzzle.rows = function () {
-            if (arguments.length>0 && arguments[0]!==undefined) {
-                _thisPuzzle.setPuzzle({rows:arguments[0]});
+        _thisPuzzle.rows = function (rows) {
+            if (arguments.length>0 && rows!==undefined) {
+                _thisPuzzle.setPuzzle({rows: rows});
             }
             return _rows;
         };
-        _thisPuzzle.image = function () {
-            if (arguments.length>0 && arguments[0]!==undefined) {
-                _thisPuzzle.setPuzzle({image:arguments[0]});
+        _thisPuzzle.image = function (image) {
+            if (arguments.length>0 && image!==undefined) {
+                _thisPuzzle.setPuzzle({image: image});
             }
             return _image;
         };
@@ -162,8 +162,8 @@ var Puzzle = (function () {
             }
             xResidual = (_$carpet.width() - (_cols-1)*_spacing) % _cols;
             yResidual = (_$carpet.height() - (_rows-1)*_spacing) % _rows;
-            sqWidth = parseInt((_$carpet.width() - (_cols-1)*_spacing)/_cols);
-            sqHeight = parseInt((_$carpet.height() - (_rows-1)*_spacing)/_rows);
+            sqWidth = parseInt((_$carpet.width() - (_cols-1)*_spacing)/_cols, 10);
+            sqHeight = parseInt((_$carpet.height() - (_rows-1)*_spacing)/_rows, 10);
             if (xResidual!==_xResidual || yResidual!==_yResidual ||
                 sqWidth!==_sqWidth || sqHeight!==_sqHeight) {
                 _xResidual = xResidual;
@@ -282,10 +282,10 @@ var Puzzle = (function () {
                     if (y!==_y) {
                         property.top = _getTop(y);
                     }
-                    if (y<=_yResidual !== _y<=_yResidual) {
+                    if ((y<=_yResidual) !== (_y<=_yResidual)) {
                         property.height = _getHeight(y);
                     }
-                    if (x<=_xResidual !== _x<=_xResidual) {
+                    if ((x<=_xResidual) !== (_x<=_xResidual)) {
                         property.width = _getWidth(x);
                     }
                 }
@@ -410,7 +410,7 @@ var Puzzle = (function () {
         _thisPuzzle.unbindSquares = function (e, f) {
             _squares.map(function (sq) {sq.unbind(e, f);});
             delete _bindings[e];
-        }
+        };
         _thisPuzzle.solvable = function () {
             var x,y, row, array = [], inversions;
             for (y=1; y<=_rows; y++) {
@@ -439,7 +439,7 @@ var Puzzle = (function () {
         _thisPuzzle.reset = function () {
             _squares.map(function (sq) {
                 sq.move(sq.ox(), sq.oy());
-            })
+            });
         };
         _thisPuzzle.setPuzzle($container, options);
     };
