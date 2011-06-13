@@ -1,6 +1,6 @@
 var Puzzle = (function () {
     var countInversions = function (array) {
-        var orderArray = [];
+        var sortedArray = [];
         function _countInversions (first, last) {
             var middle, count, i, j, k, c;
             if (first >= last-1) {
@@ -14,28 +14,28 @@ var Puzzle = (function () {
             c = 0;
             while (i<middle && j<last) {
                 if (array[i]>array[j]) {
-                    orderArray[k] = array[j];
+                    sortedArray[k] = array[j];
                     j += 1;
                     c += 1;
                 } else {
-                    orderArray[k] = array[i];
+                    sortedArray[k] = array[i];
                     count += c;
                     i += 1;
                 }
                 k += 1;
             }
             for (;i<middle; i++) {
-                orderArray[k] = array[i];
+                sortedArray[k] = array[i];
                 k += 1;
                 count += c;
             }
             for (;j<last; j++) {
-                orderArray[k] = array[j];
+                sortedArray[k] = array[j];
                 k += 1;
             }
             // copy back
             for (i=first; i<last; i++) {
-                array[i] = orderArray[i];
+                array[i] = sortedArray[i];
             }
             return count;
         }
