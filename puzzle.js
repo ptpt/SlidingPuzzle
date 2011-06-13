@@ -193,7 +193,7 @@ var Puzzle = (function () {
                 }
                 if (_bindings) {
                     for (e in _bindings) {
-                        _thisPuzzle.bindSquares(e, _bindings[e]);
+                        _thisPuzzle.bind(e, _bindings[e]);
                     }
                 }
             }
@@ -401,13 +401,13 @@ var Puzzle = (function () {
         _thisPuzzle.isSpare = function (x, y) {
             return x===_spare.x && y===_spare.y;
         };
-        _thisPuzzle.bindSquares = function (e, f) {
+        _thisPuzzle.bind = function (e, f) {
             if (_squares) {
                 _squares.map(function (sq) {sq.bind(e, f);});
                 _bindings[e] = f;
             }
         };
-        _thisPuzzle.unbindSquares = function (e, f) {
+        _thisPuzzle.unbind = function (e, f) {
             _squares.map(function (sq) {sq.unbind(e, f);});
             delete _bindings[e];
         };
