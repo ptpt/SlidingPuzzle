@@ -211,7 +211,7 @@ var Puzzle = (function () {
         _thisPuzzle.squareAt = function (x,y) {
             return _squareAt[y][x];
         };
-        _thisPuzzle.getSpare = function () {
+        _thisPuzzle.spare = function () {
             return {x:_spare.x, y:_spare.y};
         };
         _thisPuzzle.Square = function (x, y, id) {
