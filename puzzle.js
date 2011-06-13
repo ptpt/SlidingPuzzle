@@ -370,6 +370,14 @@ var Puzzle = (function () {
             var x,y,random = [], index,
             done = 0,
             movements = _squares.length,
+            shuffleOff = function () {
+                _squares.map(function (sq) {
+                    sq.render();
+                })
+                if (complete) {
+                    complete.apply(_thisPuzzle);
+                }
+            },
             callback = function () {
                 if (++done===movements) {
                     if (!_thisPuzzle.solvable()) {
@@ -377,9 +385,9 @@ var Puzzle = (function () {
                                          _squares[1].y(),
                                          false,
                                          duration,
-                                         complete);
+                                         shuffleOff);
                     } else {
-                        complete.apply(_thisPuzzle);
+                        shuffleOff();
                     }
                 }
             };
