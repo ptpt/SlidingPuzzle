@@ -63,10 +63,10 @@ var Puzzle = (function () {
             return x*(_sqWidth+_spacing) - _spacing - _sqWidth + (x<=_xResidual?x-1:_xResidual);
         },
         _getWidth = function (x) {
-            return _sqWidth + (x<=_xResidual?1:0);
+            return x<=_xResidual? _sqWidth+1 : _sqWidth;
         },
         _getHeight = function (y) {
-            return _sqHeight + (y<=_yResidual?1:0);
+            return y<=_yResidual? _sqHeight+1 : _sqHeight;
         };
         // public members
         _thisPuzzle.CLASS_NAME = 'Puzzle';
