@@ -233,8 +233,8 @@ var Puzzle = (function () {
                               'left': _getLeft(_x),
                               'top': _getTop(_y),
                               'background-image': _image,
-                              'background-position-x': -1*_getLeft(_ox),
-                              'background-position-y': -1*_getTop(_oy)});
+                              'background-position': (-1*_getLeft(_ox)).toString()+'px ' \
+                              +  (-1*_getTop(_oy)).toString()+'px'});
             };
             _thisSquare.$ = function () {
                 return _$square;
