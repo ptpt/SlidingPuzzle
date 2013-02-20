@@ -437,12 +437,8 @@ var Puzzle = (function () {
             inversions = countInversions(array);
             // ( (grid width odd) && (#inversions even) )  ||
             // ( (grid width even) && ((blank on odd row from bottom) == (#inversions even)) )
-            if (((_cols%2 !== 0) && (inversions%2 === 0)) ||
-                ((_cols%2===0) && (row%2!==inversions%2))) {
-                return true;
-            } else {
-                return false;
-            }
+            return ((_cols % 2 !== 0) && (inversions % 2 === 0)) ||
+                ((_cols % 2 === 0) && (row % 2 !== inversions % 2));
         };
         _thisPuzzle.reset = function () {
             _squares.map(function (sq) {
