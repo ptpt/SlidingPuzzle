@@ -4,6 +4,8 @@ A [sliding puzzle](http://en.wikipedia.org/wiki/Sliding_puzzle) game
 written in CoffeeScript. It uses jQuery and provides its functionality
 as a jQuery plugin.
 
+View [Demo](http://ptpt.github.com/SlidingPuzzle/).
+
 ## How to use
 
 **1**. Copy `puzzle.js` to your site folder.
