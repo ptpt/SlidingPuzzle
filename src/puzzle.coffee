@@ -353,7 +353,7 @@ class Puzzle
         @rows = int(@rows)
 
         if @rows < 2
-            throw {msg: 'at least 2 required rows.'}
+            throw {msg: 'at least 2 rows required.'}
 
         if 'cols' of options
             @cols = options.cols

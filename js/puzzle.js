@@ -420,7 +420,7 @@
       this.rows = int(this.rows);
       if (this.rows < 2) {
         throw {
-          msg: 'at least 2 required rows.'
+          msg: 'at least 2 rows required.'
         };
       }
       if ('cols' in options) {
