@@ -553,18 +553,22 @@
     Puzzle.prototype.unbind = function(event, handler) {
       var cc, square, _i, _len, _ref;
       if (event in this.bindings) {
-        this.bindings[event] = (function() {
-          var _i, _len, _ref, _results;
-          _ref = this.bindings[event];
-          _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            cc = _ref[_i];
-            if (cc !== handler) {
-              _results.push(cc);
+        if (handler != null) {
+          this.bindings[event] = (function() {
+            var _i, _len, _ref, _results;
+            _ref = this.bindings[event];
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              cc = _ref[_i];
+              if (cc !== handler) {
+                _results.push(cc);
+              }
             }
-          }
-          return _results;
-        }).call(this);
+            return _results;
+          }).call(this);
+        } else {
+          this.bindings[event] = [];
+        }
       }
       if (__indexOf.call(PUZZLE_EVENTS, event) < 0) {
         _ref = this.squareList;

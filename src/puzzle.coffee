@@ -476,7 +476,10 @@ class Puzzle
     # unbind jQuery events or specific puzzle events
     unbind: (event, handler) ->
         if event of @bindings
-            @bindings[event] = (cc for cc in @bindings[event] when cc isnt handler)
+            if handler?
+                @bindings[event] = (cc for cc in @bindings[event] when cc isnt handler)
+            else
+                @bindings[event] = []
 
         if event not in PUZZLE_EVENTS
             for square in @squareList
