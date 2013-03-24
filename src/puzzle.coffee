@@ -442,7 +442,7 @@ class Puzzle
             swap.call(@squareList[0], @squareList[1].row, @squareList[1].col)
 
         once = runOnceAt(@squareList.length, =>
-            @status.shuffling -= 0
+            @status.shuffling -= 1
             callback?.apply(this)
             @trigger('puzzle.shuffle')
         )
