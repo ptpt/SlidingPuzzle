@@ -138,11 +138,15 @@ class Square
         @origCol = @col = col
         # which board this square belongs.
         @board = board
-        @bindingProxy = {}
+        @bindings = {
+            one: {}
+            always: {}
+        }
 
         @div = $('<div></div>')
         @board.carpet.append(@div)
         @redraw()
+        @div.data('id', id)
 
         return this
 
@@ -234,7 +238,7 @@ class Square
         return this
 
     # call all square handlers
-    trigger = (event) ->
+    trigger: (event) ->
         for type in ['always', 'one']
             bindings = @bindings[type]
             if event of bindings
@@ -523,6 +527,9 @@ class Puzzle
         @status.resetting += 1
         @each(-> slowlyMove.call(this, @row, @col, once))
         return this
+
+    getSquare: (div) ->
+        return @squareList[$(div).data('id')]
 
 
 # jQuery plugin

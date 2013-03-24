@@ -144,17 +144,21 @@
   };
 
   Square = (function() {
-    var jqBind, stepCallback, trigger;
+    var stepCallback;
 
     function Square(id, board, row, col) {
       this.id = id;
       this.origRow = this.row = row;
       this.origCol = this.col = col;
       this.board = board;
-      this.bindingProxy = {};
+      this.bindings = {
+        one: {},
+        always: {}
+      };
       this.div = $('<div></div>');
       this.board.carpet.append(this.div);
       this.redraw();
+      this.div.data('id', id);
       return this;
     }
 

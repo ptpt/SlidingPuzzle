@@ -7,7 +7,7 @@ $(function () {
                                     cols: 4});
 
     click = function () {
-        square = game.getSqaure(this);
+        square = game.getSquare(this);
         square.steps();
     }
 
