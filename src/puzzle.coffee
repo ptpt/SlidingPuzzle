@@ -413,6 +413,9 @@ class Puzzle
         return isSolvable(@map(-> @id), @rows, @cols, @emptyRow)
 
     shuffle: (callback) ->
+        if @status.shuffling > 0
+            return @one('puzzle.shuffle', Puzzle.prototype.shuffle)
+
         # place empty square to the bottom right corner
         if @squareMatrix[@rows][@cols]
             @squareMatrix[@rows][@cols].swap(@emptyRow, @emptyCol)
