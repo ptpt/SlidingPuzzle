@@ -220,13 +220,6 @@ class Square
 
         return this
 
-    jqBind = ->
-        args = arguments
-        handler = args[-1]
-        args[-1] = =>
-            handler.apply(this, arguments)
-        bind.apply(this.div, args)
-
     # bind jQuery events
     # in the callback function "this" refers to square.
     bind: (event, callback, one=false) ->
