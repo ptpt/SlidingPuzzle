@@ -232,12 +232,15 @@ class Square
 
     # call all square handlers
     trigger: (event) ->
-        for type in ['always', 'one']
-            bindings = @bindings[type]
-            if event of bindings
-                for handler in bindings[event]
-                    handler?.call(this)
+        if event of @bindings.always
+            for handler in @bindings.always[event]
+                handler?.call(this)
+
+        if event of @bindings.one
+            handlers = @bindings.one[event]
             @bindings.one[event] = []
+            for handler in handlers
+                handler?.call(this)
 
         return this
 
@@ -501,12 +504,15 @@ class Puzzle
 
     # call all board handlers
     trigger: (event) ->
-        for type in ['always', 'one']
-            bindings = @bindings[type]
-            if event of bindings
-                for handler in bindings[event]
-                    handler?.call(this)
+        if event of @bindings.always
+            for handler in @bindings.always[event]
+                handler?.call(this)
+
+        if event of @bindings.one
+            handlers = @bindings.one[event]
             @bindings.one[event] = []
+            for handler in handlers
+                handler?.call(this)
 
         return this
 
