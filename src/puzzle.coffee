@@ -1,7 +1,3 @@
-# specific puzzle events
-PUZZLE_EVENTS = ['puzzle.done', 'puzzle.step', 'puzzle.shuffle', 'puzzle.reset']
-
-
 # count inversions of an array.
 # this will be used to check if a situation is solvable.
 countInversions = (array) ->
@@ -19,20 +15,6 @@ runOnceAt = (at, callback) ->
         if n == at
             callback.apply(this, arguments)
     return once
-
-
-# run all board callbacks of specified event
-triggerBoardEvent = (event) ->
-    if event of @bindings
-        for callback in @bindings[event]
-            callback?.apply(this)
-
-
-# run all square callbacks of specified event
-triggerSquareEvent = (event) ->
-    if event of @board.bindings
-        for callback in @board.bindings[event]
-            callback?.apply(this)
 
 
 arraySwap = (array, x, y) ->
@@ -207,9 +189,9 @@ class Square
     stepCallback = (callback) ->
         =>
             callback?.apply(this)
-            triggerSquareEvent.call(this, 'puzzle.step')
+            @trigger('puzzle.step')
             if @board.isComplete() and @board.status.moving == 0
-                triggerBoardEvent.call(@board, 'puzzle.done')
+                @board.trigger('puzzle.done')
 
     # shift current square if it's adjacent empty square.
     step: (callback) ->
@@ -234,24 +216,47 @@ class Square
 
         return this
 
+    jqBind = ->
+        args = arguments
+        handler = args[-1]
+        args[-1] = =>
+            handler.apply(this, arguments)
+        bind.apply(this.div, args)
+
     # bind jQuery events
     # in the callback function "this" refers to square.
-    bind: (event, callback) ->
-        squareCallback = => callback.apply(this)
-        @bindingProxy[callback] = squareCallback
-        @div.bind(event, squareCallback)
+    bind: (event, callback, one=false) ->
+        bindings = if one then @bindings.one else @bindings.always
+        if event not of bindings
+            bindings[event] = []
+        bindings[event].push(handler)
+
+        return this
+
+    # call all square handlers
+    trigger = (event) ->
+        for type in ['always', 'one']
+            bindings = @bindings[type]
+            if event of bindings
+                for handler in bindings[event]
+                    handler?.call(this)
+            @bindings.one[event] = []
+
         return this
 
     # unbind jQuery events
-    unbind: (event, callback) ->
-        if callback?
-            if callback of @bindingProxy
-                @div.unbind(event, @bindingProxy[callback])
-                delete @bindingProxy[callback]
-            else
-                @div.unbind(event, callback)
-        else
-            @div.unbind(event)
+    unbind: (event, handler) ->
+        for type in ['one', 'always']
+            bindings = @bindings[type]
+            if event of bindings
+                bindings[event] = if handler?
+                    (cc for cc in bindings[event] when cc isnt handler)
+                else
+                    []
+        return this
+
+    one: (event, handler) ->
+        @bind(event, handler, true)
         return this
 
     reset: (callback) ->
@@ -293,11 +298,18 @@ class Puzzle
                     id += 1
                 @squareMatrix[row][col] = square
 
+        @$squares = @carpet.children()
+
         # rebind events
-        bindings = @bindings
-        @bindings = {}
-        for event, callbacks of bindings
-            @bind event, cc for cc in callbacks
+        bindings = @bindings.one
+        @bindings.one = {}
+        for event, handlers of bindings
+            @bind(event, handler, true) for handler in handlers
+
+        bindings = @bindings.always
+        @bindings.always = {}
+        for event, handlers of bindings
+            @bind(event, handler) for handler in handlers
 
         return this
 
@@ -328,7 +340,10 @@ class Puzzle
             if key not of options
                 options[key] = value
 
-        @bindings = {}
+        @bindings = {
+            one: {}
+            always: {}}
+
         @status = {
             moving: 0
             shuffling: 0
@@ -432,7 +447,7 @@ class Puzzle
         once = runOnceAt(@squareList.length, =>
             @status.shuffling -= 0
             callback?.apply(this)
-            triggerBoardEvent.call(this, 'puzzle.shuffle')
+            @trigger('puzzle.shuffle')
         )
 
         @status.shuffling += 1
@@ -463,36 +478,38 @@ class Puzzle
         return not @squareMatrix[row][col]?
 
     # bind jQuery events or specific puzzle events
-    bind: (event, handler) ->
-        if event not of @bindings
-            @bindings[event] = []
-        @bindings[event].push(handler)
-
-        if event not in PUZZLE_EVENTS
-            @each(-> @bind(event, handler))
+    bind: (event, handler, one=false) ->
+        bindings = if one then @bindings.one else @bindings.always
+        if event not of bindings
+            bindings[event] = []
+        bindings[event].push(handler)
 
         return this
 
     # unbind jQuery events or specific puzzle events
     unbind: (event, handler) ->
-        if event of @bindings
-            if handler?
-                @bindings[event] = (cc for cc in @bindings[event] when cc isnt handler)
-            else
-                @bindings[event] = []
-
-        if event not in PUZZLE_EVENTS
-            for square in @squareList
-                square.unbind(event, handler)
-
+        for type in ['one', 'always']
+            bindings = @bindings[type]
+            if event of bindings
+                bindings[event] = if handlers?
+                    (cc for cc in bindings[event] when cc isnt handler)
+                else
+                    []
         return this
 
     # handler runs at most one time.
     one: (event, handler) ->
-        selfRemoveHandler = ->
-            handler.apply(this)
-            @unbind(event, selfRemoveHandler)
-        @bind(event, selfRemoveHandler)
+        @bind(event, handler, true)
+        return this
+
+    # call all board handlers
+    trigger: (event) ->
+        for type in ['always', 'one']
+            bindings = @bindings[type]
+            if event of bindings
+                for handler in bindings[event]
+                    handler?.call(this)
+            @bindings.one[event] = []
 
         return this
 
@@ -501,7 +518,7 @@ class Puzzle
         once = runOnceAt(@squareList.length, =>
             @status.resetting -= 1
             callback?.apply(this)
-            triggerBoardEvent.call(this, 'puzzle.reset'))
+            @trigger('puzzle.reset'))
         swap.call(sq, sq.origRow, sq.origCol) for sq in @squareList
         @status.resetting += 1
         @each(-> slowlyMove.call(this, @row, @col, once))

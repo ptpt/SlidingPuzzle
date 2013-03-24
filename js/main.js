@@ -7,7 +7,8 @@ $(function () {
                                     cols: 4});
 
     click = function () {
-        this.steps();
+        square = game.getSqaure(this);
+        square.steps();
     }
 
     timer = {
@@ -51,11 +52,13 @@ $(function () {
 
     game.bind('puzzle.shuffle', function () {
         timer.start();
-        game.unbind('click', click).bind('click', click);
+        // game.unbind('click', click).bind('click', click);
+        // game.click(click);
         game.unbind('puzzle.done', done).one('puzzle.done', done);
         game.div.css({'background-color': 'black',
                       'border-color': 'black'});
         $('#steps').text(0);
+        console.log('shuffle');
 
     }).bind('puzzle.step', function () {
         $('#steps').text(parseInt($('#steps').text()) + 1);
