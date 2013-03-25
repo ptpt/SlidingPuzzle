@@ -317,15 +317,22 @@ class Puzzle
     redraw = ->
         # redraw after shuffling, resetting, or stepping.
         if @status.shuffling > 0
-            @one('puzzle.shuffle', => redraw.apply(this))
+            @one('puzzle.shuffle', redraw)
+
         else if @status.resetting > 0
-            @one('puzzle.reset', => redraw.apply(this))
+            @one('puzzle.reset', redraw)
+
         else if @status.moving > 0
-            @one('puzzle.step', => redraw.apply(this))
+            handler = =>
+                redraw.apply(this)
+                @each(-> @unbind('puzzle.step', handler))
+            @each(-> @one('puzzle.step', handler))
 
         recalc.apply(this)
+
         for square in @squareList
             square.redraw()
+
         return this
 
     constructor: (div, options={}) ->
