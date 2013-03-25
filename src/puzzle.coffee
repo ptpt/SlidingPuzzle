@@ -338,11 +338,8 @@ class Puzzle
         else if @status.resetting > 0
             @one('reset', redraw)
 
-        else if @status.moving > 0 #todo
-            handler = =>
-                redraw.apply(this)
-                @each(-> @unbind('step', handler))
-            @each(-> @one('step', handler))
+        else if @status.moving > 0
+            @one('step', => redraw.apply(this))
 
         recalc.apply(this)
 
