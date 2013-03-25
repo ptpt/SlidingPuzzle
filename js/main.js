@@ -49,15 +49,15 @@ $(function () {
                       'border-color': '#222'});
     }
 
-    game.bind('puzzle.shuffle', function () {
+    game.bind('shuffle', function () {
         timer.start();
+        game.unbind('done', done).one('done', done);
         game.unbind('click', click).bind('click', click);
-        game.unbind('puzzle.done', done).one('puzzle.done', done);
         game.div.css({'background-color': 'black',
                       'border-color': 'black'});
         $('#steps').text(0);
 
-    }).bind('puzzle.step', function () {
+    }).bind('step', function () {
         $('#steps').text(parseInt($('#steps').text()) + 1);
 
     }).shuffle();
