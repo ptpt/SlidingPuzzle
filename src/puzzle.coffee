@@ -222,7 +222,7 @@ class Square
 
     # bind jQuery events
     # in the callback function "this" refers to square.
-    bind: (event, callback, one=false) ->
+    bind: (event, handler, one=false) ->
         bindings = if one then @bindings.one else @bindings.always
         if event not of bindings
             bindings[event] = []
