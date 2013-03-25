@@ -71,23 +71,23 @@ getPosY = (origRow, row) ->
 # move square to (row, col) dynamically.
 slowlyMove = (row, col, callback) ->
     css = {
-        left: getLeft.call(@board, col)
-        top: getTop.call(@board, row)
-        height: getHeight.call(@board, row)
-        width: getWidth.call(@board, col)
+        left: getLeft.call(@puzzle, col)
+        top: getTop.call(@puzzle, row)
+        height: getHeight.call(@puzzle, row)
+        width: getWidth.call(@puzzle, col)
     }
 
-    if @origCol == @board.cols
-        css['background-position-x'] = getPosX.call(@board, @origCol, col)
+    if @origCol == @puzzle.cols
+        css['background-position-x'] = getPosX.call(@puzzle, @origCol, col)
 
-    if @origRow == @board.rows
-        css['background-position-y'] = getPosY.call(@board, @origRow, row)
+    if @origRow == @puzzle.rows
+        css['background-position-y'] = getPosY.call(@puzzle, @origRow, row)
 
     moveCallback = =>
-        @board.status.moving -= 1
+        @puzzle.status.moving -= 1
         callback?.apply(this)
 
-    @board.status.moving += 1
+    @puzzle.status.moving += 1
 
     @div.animate(css, moveCallback)
 
@@ -97,33 +97,33 @@ swap = (row, col) ->
     if @row == row and @col == col
         return this
 
-    square = @board.squareMatrix[row][col]
+    square = @puzzle.squareMatrix[row][col]
 
     # calculate incompletions
     if row == @origRow and col == @origCol
         # back to original position
-        @board.incompletions -= 1
+        @puzzle.incompletions -= 1
     else if @row == @origRow and @col == @origCol
         # leave from original position
-        @board.incompletions += 1
+        @puzzle.incompletions += 1
     if square
         if @row == square.origRow and @col == square.origCol
             # back to original position
-            @board.incompletions -= 1
+            @puzzle.incompletions -= 1
         else if square.row == square.origRow and square.col == square.origCol
             # leave from original position
-            @board.incompletions += 1
+            @puzzle.incompletions += 1
 
     # swap
-    @board.squareMatrix[row][col] = this
-    @board.squareMatrix[@row][@col] = square
+    @puzzle.squareMatrix[row][col] = this
+    @puzzle.squareMatrix[@row][@col] = square
     if square
         square.row = @row
         square.col = @col
     else
         # empty square
-        @board.emptyRow = @row
-        @board.emptyCol = @col
+        @puzzle.emptyRow = @row
+        @puzzle.emptyCol = @col
     @row = row
     @col = col
 
@@ -131,13 +131,13 @@ swap = (row, col) ->
 
 
 class Square
-    constructor: (id, board, row, col) ->
+    constructor: (id, puzzle, row, col) ->
         @id = id
         # original and current positions.
         @origRow = @row = row
         @origCol = @col = col
-        # which board this square belongs.
-        @board = board
+        # which puzzle this square belongs.
+        @puzzle = puzzle
         @bindings = {
             one: {}
             always: {}
@@ -145,7 +145,7 @@ class Square
         }
 
         @div = $('<div></div>')
-        @board.carpet.append(@div)
+        @puzzle.board.append(@div)
         @redraw()
         @div.data('id', id)
 
@@ -155,13 +155,13 @@ class Square
     redraw: ->
         css = {
             position: 'absolute'
-            left: getLeft.call(@board, @col)
-            top: getTop.call(@board, @row)
-            width: getWidth.call(@board, @col)
-            height: getHeight.call(@board, @row)
-            'background-image': @board.image
-            'background-position-x': getPosX.call(@board, @origCol, @col)
-            'background-position-y': getPosY.call(@board, @origRow, @row)
+            left: getLeft.call(@puzzle, @col)
+            top: getTop.call(@puzzle, @row)
+            width: getWidth.call(@puzzle, @col)
+            height: getHeight.call(@puzzle, @row)
+            'background-image': @puzzle.image
+            'background-position-x': getPosX.call(@puzzle, @origCol, @col)
+            'background-position-y': getPosY.call(@puzzle, @origRow, @row)
         }
 
         @div.css(css)
@@ -170,10 +170,10 @@ class Square
     # return if square is movable.
     isMovable: ->
         # square is movable only if it is adjacent to the empty square.
-        if @board.emptyCol == @col
-            movable = @board.emptyRow == @row - 1 or @board.emptyRow - 1 == @row
-        else if @board.emptyRow == @row
-            movable = @board.emptyCol == @col - 1 or @board.emptyCol - 1 == @col
+        if @puzzle.emptyCol == @col
+            movable = @puzzle.emptyRow == @row - 1 or @puzzle.emptyRow - 1 == @row
+        else if @puzzle.emptyRow == @row
+            movable = @puzzle.emptyCol == @col - 1 or @puzzle.emptyCol - 1 == @col
         else
             movable = false
 
@@ -181,7 +181,7 @@ class Square
 
     # swap squares with animation
     swap: (row, col, callback) ->
-        dest = @board.squareMatrix[row][col]
+        dest = @puzzle.squareMatrix[row][col]
         swap.call(this, row, col)
         if dest
             callback = callback and runOnceAt(2, callback)
@@ -195,29 +195,29 @@ class Square
         =>
             callback?.apply(this)
             @trigger('step')
-            if @board.isComplete() and @board.status.moving == 0
-                @board.trigger('done')
+            if @puzzle.isComplete() and @puzzle.status.moving == 0
+                @puzzle.trigger('done')
 
     # shift current square if it's adjacent empty square.
     step: (callback) ->
         if @isMovable()
             callback = stepCallback.call(this, callback)
-            @swap(@board.emptyRow, @board.emptyCol, callback)
+            @swap(@puzzle.emptyRow, @puzzle.emptyCol, callback)
         return this
 
     # shift current row or col if possible
     steps: (callback) ->
         callback = stepCallback.call(this, callback)
 
-        if @board.emptyCol == @col
-            once = runOnceAt(Math.abs(@board.emptyRow - @row), callback)
-            for row in [@board.emptyRow .. @row]
-                @board.squareMatrix[row][@col]?.swap(@board.emptyRow, @board.emptyCol, once)
+        if @puzzle.emptyCol == @col
+            once = runOnceAt(Math.abs(@puzzle.emptyRow - @row), callback)
+            for row in [@puzzle.emptyRow .. @row]
+                @puzzle.squareMatrix[row][@col]?.swap(@puzzle.emptyRow, @puzzle.emptyCol, once)
 
-        else if @board.emptyRow == @row
-            once = runOnceAt(Math.abs(@board.emptyCol - @col), callback)
-            for col in [@board.emptyCol .. @col]
-                @board.squareMatrix[@row][col]?.swap(@board.emptyRow, @board.emptyCol, once)
+        else if @puzzle.emptyRow == @row
+            once = runOnceAt(Math.abs(@puzzle.emptyCol - @col), callback)
+            for col in [@puzzle.emptyCol .. @col]
+                @puzzle.squareMatrix[@row][col]?.swap(@puzzle.emptyRow, @puzzle.emptyCol, once)
 
         return this
 
@@ -282,17 +282,17 @@ class Square
 
 class Puzzle
     recalc = ->
-        @carpet.width(@div.width()).height(@div.height())
-        @sqHeight = Math.floor((@carpet.height() - (@rows - 1) * @spacing) / @rows)
-        @sqWidth = Math.floor((@carpet.width() - (@cols - 1) * @spacing) / @cols)
-        @rowResidual = (@carpet.height() - (@rows - 1) * @spacing) % @rows
-        @colResidual = (@carpet.width() - (@cols - 1) * @spacing) % @cols
+        @board.width(@div.width()).height(@div.height())
+        @sqHeight = Math.floor((@board.height() - (@rows - 1) * @spacing) / @rows)
+        @sqWidth = Math.floor((@board.width() - (@cols - 1) * @spacing) / @cols)
+        @rowResidual = (@board.height() - (@rows - 1) * @spacing) % @rows
+        @colResidual = (@board.width() - (@cols - 1) * @spacing) % @cols
 
     # empty board and rebuild everything.
     rebuild: ->
         @div.empty()
-        @carpet = $('<div style="position:relative; margin:0"></div>')
-        @div.append(@carpet)
+        @board = $('<div style="position:relative; margin:0"></div>')
+        @div.append(@board)
         @incompletions = 0
         @squareList = []
         @squareMatrix = []
@@ -314,7 +314,7 @@ class Puzzle
                     id += 1
                 @squareMatrix[row][col] = square
 
-        @$squares = @carpet.children()
+        @$squares = @board.children()
 
         # rebind events
         bindings = @bindings.one

@@ -92,22 +92,22 @@
     var css, moveCallback,
       _this = this;
     css = {
-      left: getLeft.call(this.board, col),
-      top: getTop.call(this.board, row),
-      height: getHeight.call(this.board, row),
-      width: getWidth.call(this.board, col)
+      left: getLeft.call(this.puzzle, col),
+      top: getTop.call(this.puzzle, row),
+      height: getHeight.call(this.puzzle, row),
+      width: getWidth.call(this.puzzle, col)
     };
-    if (this.origCol === this.board.cols) {
-      css['background-position-x'] = getPosX.call(this.board, this.origCol, col);
+    if (this.origCol === this.puzzle.cols) {
+      css['background-position-x'] = getPosX.call(this.puzzle, this.origCol, col);
     }
-    if (this.origRow === this.board.rows) {
-      css['background-position-y'] = getPosY.call(this.board, this.origRow, row);
+    if (this.origRow === this.puzzle.rows) {
+      css['background-position-y'] = getPosY.call(this.puzzle, this.origRow, row);
     }
     moveCallback = function() {
-      _this.board.status.moving -= 1;
+      _this.puzzle.status.moving -= 1;
       return callback != null ? callback.apply(_this) : void 0;
     };
-    this.board.status.moving += 1;
+    this.puzzle.status.moving += 1;
     return this.div.animate(css, moveCallback);
   };
 
@@ -116,27 +116,27 @@
     if (this.row === row && this.col === col) {
       return this;
     }
-    square = this.board.squareMatrix[row][col];
+    square = this.puzzle.squareMatrix[row][col];
     if (row === this.origRow && col === this.origCol) {
-      this.board.incompletions -= 1;
+      this.puzzle.incompletions -= 1;
     } else if (this.row === this.origRow && this.col === this.origCol) {
-      this.board.incompletions += 1;
+      this.puzzle.incompletions += 1;
     }
     if (square) {
       if (this.row === square.origRow && this.col === square.origCol) {
-        this.board.incompletions -= 1;
+        this.puzzle.incompletions -= 1;
       } else if (square.row === square.origRow && square.col === square.origCol) {
-        this.board.incompletions += 1;
+        this.puzzle.incompletions += 1;
       }
     }
-    this.board.squareMatrix[row][col] = this;
-    this.board.squareMatrix[this.row][this.col] = square;
+    this.puzzle.squareMatrix[row][col] = this;
+    this.puzzle.squareMatrix[this.row][this.col] = square;
     if (square) {
       square.row = this.row;
       square.col = this.col;
     } else {
-      this.board.emptyRow = this.row;
-      this.board.emptyCol = this.col;
+      this.puzzle.emptyRow = this.row;
+      this.puzzle.emptyCol = this.col;
     }
     this.row = row;
     this.col = col;
@@ -146,18 +146,18 @@
   Square = (function() {
     var stepCallback;
 
-    function Square(id, board, row, col) {
+    function Square(id, puzzle, row, col) {
       this.id = id;
       this.origRow = this.row = row;
       this.origCol = this.col = col;
-      this.board = board;
+      this.puzzle = puzzle;
       this.bindings = {
         one: {},
         always: {},
         proxy: {}
       };
       this.div = $('<div></div>');
-      this.board.carpet.append(this.div);
+      this.puzzle.board.append(this.div);
       this.redraw();
       this.div.data('id', id);
       return this;
@@ -167,13 +167,13 @@
       var css;
       css = {
         position: 'absolute',
-        left: getLeft.call(this.board, this.col),
-        top: getTop.call(this.board, this.row),
-        width: getWidth.call(this.board, this.col),
-        height: getHeight.call(this.board, this.row),
-        'background-image': this.board.image,
-        'background-position-x': getPosX.call(this.board, this.origCol, this.col),
-        'background-position-y': getPosY.call(this.board, this.origRow, this.row)
+        left: getLeft.call(this.puzzle, this.col),
+        top: getTop.call(this.puzzle, this.row),
+        width: getWidth.call(this.puzzle, this.col),
+        height: getHeight.call(this.puzzle, this.row),
+        'background-image': this.puzzle.image,
+        'background-position-x': getPosX.call(this.puzzle, this.origCol, this.col),
+        'background-position-y': getPosY.call(this.puzzle, this.origRow, this.row)
       };
       this.div.css(css);
       return this;
@@ -181,10 +181,10 @@
 
     Square.prototype.isMovable = function() {
       var movable;
-      if (this.board.emptyCol === this.col) {
-        movable = this.board.emptyRow === this.row - 1 || this.board.emptyRow - 1 === this.row;
-      } else if (this.board.emptyRow === this.row) {
-        movable = this.board.emptyCol === this.col - 1 || this.board.emptyCol - 1 === this.col;
+      if (this.puzzle.emptyCol === this.col) {
+        movable = this.puzzle.emptyRow === this.row - 1 || this.puzzle.emptyRow - 1 === this.row;
+      } else if (this.puzzle.emptyRow === this.row) {
+        movable = this.puzzle.emptyCol === this.col - 1 || this.puzzle.emptyCol - 1 === this.col;
       } else {
         movable = false;
       }
@@ -193,7 +193,7 @@
 
     Square.prototype.swap = function(row, col, callback) {
       var dest;
-      dest = this.board.squareMatrix[row][col];
+      dest = this.puzzle.squareMatrix[row][col];
       swap.call(this, row, col);
       if (dest) {
         callback = callback && runOnceAt(2, callback);
@@ -210,8 +210,8 @@
           callback.apply(_this);
         }
         _this.trigger('step');
-        if (_this.board.isComplete() && _this.board.status.moving === 0) {
-          return _this.board.trigger('done');
+        if (_this.puzzle.isComplete() && _this.puzzle.status.moving === 0) {
+          return _this.puzzle.trigger('done');
         }
       };
     };
@@ -219,7 +219,7 @@
     Square.prototype.step = function(callback) {
       if (this.isMovable()) {
         callback = stepCallback.call(this, callback);
-        this.swap(this.board.emptyRow, this.board.emptyCol, callback);
+        this.swap(this.puzzle.emptyRow, this.puzzle.emptyCol, callback);
       }
       return this;
     };
@@ -227,18 +227,18 @@
     Square.prototype.steps = function(callback) {
       var col, once, row, _i, _j, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
       callback = stepCallback.call(this, callback);
-      if (this.board.emptyCol === this.col) {
-        once = runOnceAt(Math.abs(this.board.emptyRow - this.row), callback);
-        for (row = _i = _ref = this.board.emptyRow, _ref1 = this.row; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; row = _ref <= _ref1 ? ++_i : --_i) {
-          if ((_ref2 = this.board.squareMatrix[row][this.col]) != null) {
-            _ref2.swap(this.board.emptyRow, this.board.emptyCol, once);
+      if (this.puzzle.emptyCol === this.col) {
+        once = runOnceAt(Math.abs(this.puzzle.emptyRow - this.row), callback);
+        for (row = _i = _ref = this.puzzle.emptyRow, _ref1 = this.row; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; row = _ref <= _ref1 ? ++_i : --_i) {
+          if ((_ref2 = this.puzzle.squareMatrix[row][this.col]) != null) {
+            _ref2.swap(this.puzzle.emptyRow, this.puzzle.emptyCol, once);
           }
         }
-      } else if (this.board.emptyRow === this.row) {
-        once = runOnceAt(Math.abs(this.board.emptyCol - this.col), callback);
-        for (col = _j = _ref3 = this.board.emptyCol, _ref4 = this.col; _ref3 <= _ref4 ? _j <= _ref4 : _j >= _ref4; col = _ref3 <= _ref4 ? ++_j : --_j) {
-          if ((_ref5 = this.board.squareMatrix[this.row][col]) != null) {
-            _ref5.swap(this.board.emptyRow, this.board.emptyCol, once);
+      } else if (this.puzzle.emptyRow === this.row) {
+        once = runOnceAt(Math.abs(this.puzzle.emptyCol - this.col), callback);
+        for (col = _j = _ref3 = this.puzzle.emptyCol, _ref4 = this.col; _ref3 <= _ref4 ? _j <= _ref4 : _j >= _ref4; col = _ref3 <= _ref4 ? ++_j : --_j) {
+          if ((_ref5 = this.puzzle.squareMatrix[this.row][col]) != null) {
+            _ref5.swap(this.puzzle.emptyRow, this.puzzle.emptyCol, once);
           }
         }
       }
@@ -343,18 +343,18 @@
     var isSolvable, recalc, redraw;
 
     recalc = function() {
-      this.carpet.width(this.div.width()).height(this.div.height());
-      this.sqHeight = Math.floor((this.carpet.height() - (this.rows - 1) * this.spacing) / this.rows);
-      this.sqWidth = Math.floor((this.carpet.width() - (this.cols - 1) * this.spacing) / this.cols);
-      this.rowResidual = (this.carpet.height() - (this.rows - 1) * this.spacing) % this.rows;
-      return this.colResidual = (this.carpet.width() - (this.cols - 1) * this.spacing) % this.cols;
+      this.board.width(this.div.width()).height(this.div.height());
+      this.sqHeight = Math.floor((this.board.height() - (this.rows - 1) * this.spacing) / this.rows);
+      this.sqWidth = Math.floor((this.board.width() - (this.cols - 1) * this.spacing) / this.cols);
+      this.rowResidual = (this.board.height() - (this.rows - 1) * this.spacing) % this.rows;
+      return this.colResidual = (this.board.width() - (this.cols - 1) * this.spacing) % this.cols;
     };
 
     Puzzle.prototype.rebuild = function() {
       var bindings, col, event, handler, handlers, id, row, square, _i, _j, _k, _l, _len, _len1, _ref, _ref1;
       this.div.empty();
-      this.carpet = $('<div style="position:relative; margin:0"></div>');
-      this.div.append(this.carpet);
+      this.board = $('<div style="position:relative; margin:0"></div>');
+      this.div.append(this.board);
       this.incompletions = 0;
       this.squareList = [];
       this.squareMatrix = [];
@@ -375,7 +375,7 @@
           this.squareMatrix[row][col] = square;
         }
       }
-      this.$squares = this.carpet.children();
+      this.$squares = this.board.children();
       bindings = this.bindings.one;
       this.bindings.one = {};
       for (event in bindings) {
