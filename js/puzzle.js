@@ -683,10 +683,6 @@
       return this;
     };
 
-    Puzzle.prototype.getSquare = function(div) {
-      return this.squareList[$(div).data('id')];
-    };
-
     return Puzzle;
 
   })();

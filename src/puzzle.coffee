@@ -558,9 +558,6 @@ class Puzzle
         @each(-> slowlyMove.call(this, @row, @col, once))
         return this
 
-    getSquare: (div) ->
-        return @squareList[$(div).data('id')]
-
 
 # jQuery plugin
 do ($=jQuery) ->
