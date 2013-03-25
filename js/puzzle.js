@@ -444,10 +444,10 @@
         shuffling: 0,
         resetting: 0
       };
-      this.set(options);
+      this.render(options);
     }
 
-    Puzzle.prototype.set = function(options) {
+    Puzzle.prototype.render = function(options) {
       var doRebuild, doRedraw;
       if (options == null) {
         options = {};

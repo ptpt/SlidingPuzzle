@@ -370,10 +370,10 @@ class Puzzle
             resetting: 0
         }
 
-        @set(options)
+        @render(options)
 
-    # changing options takes effect immediately.
-    set: (options={}) ->
+    # render puzzle with options.
+    render: (options={}) ->
         doRebuild = false
         doRedraw = false
 
