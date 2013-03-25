@@ -153,7 +153,8 @@
       this.board = board;
       this.bindings = {
         one: {},
-        always: {}
+        always: {},
+        proxy: {}
       };
       this.div = $('<div></div>');
       this.board.carpet.append(this.div);
@@ -208,9 +209,9 @@
         if (callback != null) {
           callback.apply(_this);
         }
-        _this.trigger('puzzle.step');
+        _this.trigger('step');
         if (_this.board.isComplete() && _this.board.status.moving === 0) {
-          return _this.board.trigger('puzzle.done');
+          return _this.board.trigger('done');
         }
       };
     };
@@ -244,19 +245,9 @@
       return this;
     };
 
-    jqBind = function() {
-      var args, handler,
+    Square.prototype.bind = function(event, handler, one) {
+      var bindings,
         _this = this;
-      args = arguments;
-      handler = args[-1];
-      args[-1] = function() {
-        return handler.apply(_this, arguments);
-      };
-      return bind.apply(this.div, args);
-    };
-
-    Square.prototype.bind = function(event, callback, one) {
-      var bindings;
       if (one == null) {
         one = false;
       }
@@ -265,25 +256,39 @@
         bindings[event] = [];
       }
       bindings[event].push(handler);
+      if (event !== 'step') {
+        this.bindings.proxy[handler] = function() {
+          return handler.apply(_this);
+        };
+        if (one) {
+          this.div.one(event, this.bindings.proxy[handler]);
+        } else {
+          this.div.bind(event, this.bindings.proxy[handler]);
+        }
+      }
       return this;
     };
 
-    trigger = function(event) {
-      var bindings, handler, type, _i, _j, _len, _len1, _ref, _ref1;
-      _ref = ['always', 'one'];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        type = _ref[_i];
-        bindings = this.bindings[type];
-        if (event in bindings) {
-          _ref1 = bindings[event];
-          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-            handler = _ref1[_j];
-            if (handler != null) {
-              handler.call(this);
-            }
+    Square.prototype.trigger = function(event) {
+      var handler, handlers, _i, _j, _len, _len1, _ref;
+      if (event in this.bindings.always) {
+        _ref = this.bindings.always[event];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          handler = _ref[_i];
+          if (handler != null) {
+            handler.call(this);
           }
         }
+      }
+      if (event in this.bindings.one) {
+        handlers = this.bindings.one[event];
         this.bindings.one[event] = [];
+        for (_j = 0, _len1 = handlers.length; _j < _len1; _j++) {
+          handler = handlers[_j];
+          if (handler != null) {
+            handler.call(this);
+          }
+        }
       }
       return this;
     };
@@ -307,6 +312,14 @@
             }
             return _results;
           })() : [];
+        }
+      }
+      if (event !== 'step') {
+        if (handler in this.bindings.proxy) {
+          this.div.off(event, this.bindings.proxy[handler]);
+          delete this.bindings.proxy[handler];
+        } else {
+          this.div.off(event, handler);
         }
       }
       return this;
@@ -388,15 +401,11 @@
       var square, _i, _len, _ref,
         _this = this;
       if (this.status.shuffling > 0) {
-        this.one('puzzle.shuffle', function() {
-          return redraw.apply(_this);
-        });
+        this.one('shuffle', redraw);
       } else if (this.status.resetting > 0) {
-        this.one('puzzle.reset', function() {
-          return redraw.apply(_this);
-        });
+        this.one('reset', redraw);
       } else if (this.status.moving > 0) {
-        this.one('puzzle.step', function() {
+        this.one('step', function() {
           return redraw.apply(_this);
         });
       }
@@ -507,6 +516,9 @@
     Puzzle.prototype.shuffle = function(callback) {
       var col, id, last, once, rand, row, squares, swapMap, _i, _ref, _ref1,
         _this = this;
+      if (this.status.shuffling > 0) {
+        return this.one('shuffle', Puzzle.prototype.shuffle);
+      }
       if (this.squareMatrix[this.rows][this.cols]) {
         this.squareMatrix[this.rows][this.cols].swap(this.emptyRow, this.emptyCol);
       }
@@ -531,11 +543,11 @@
         swap.call(this.squareList[0], this.squareList[1].row, this.squareList[1].col);
       }
       once = runOnceAt(this.squareList.length, function() {
-        _this.status.shuffling -= 0;
+        _this.status.shuffling -= 1;
         if (callback != null) {
           callback.apply(_this);
         }
-        return _this.trigger('puzzle.shuffle');
+        return _this.trigger('shuffle');
       });
       this.status.shuffling += 1;
       this.each(function() {
@@ -583,6 +595,11 @@
         bindings[event] = [];
       }
       bindings[event].push(handler);
+      if (event !== 'shuffle' && event !== 'reset' && event !== 'done') {
+        this.each(function() {
+          return this.bind(event, handler, one);
+        });
+      }
       return this;
     };
 
@@ -607,6 +624,11 @@
           })() : [];
         }
       }
+      if (event !== 'shuffle' && event !== 'reset' && event !== 'done') {
+        this.each(function() {
+          return this.unbind(event, handler);
+        });
+      }
       return this;
     };
 
@@ -616,21 +638,25 @@
     };
 
     Puzzle.prototype.trigger = function(event) {
-      var bindings, handler, type, _i, _j, _len, _len1, _ref, _ref1;
-      _ref = ['always', 'one'];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        type = _ref[_i];
-        bindings = this.bindings[type];
-        if (event in bindings) {
-          _ref1 = bindings[event];
-          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-            handler = _ref1[_j];
-            if (handler != null) {
-              handler.call(this);
-            }
+      var handler, handlers, _i, _j, _len, _len1, _ref;
+      if (event in this.bindings.always) {
+        _ref = this.bindings.always[event];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          handler = _ref[_i];
+          if (handler != null) {
+            handler.call(this);
           }
         }
+      }
+      if (event in this.bindings.one) {
+        handlers = this.bindings.one[event];
         this.bindings.one[event] = [];
+        for (_j = 0, _len1 = handlers.length; _j < _len1; _j++) {
+          handler = handlers[_j];
+          if (handler != null) {
+            handler.call(this);
+          }
+        }
       }
       return this;
     };
@@ -643,7 +669,7 @@
         if (callback != null) {
           callback.apply(_this);
         }
-        return _this.trigger('puzzle.reset');
+        return _this.trigger('reset');
       });
       _ref = this.squareList;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -655,6 +681,10 @@
         return slowlyMove.call(this, this.row, this.col, once);
       });
       return this;
+    };
+
+    Puzzle.prototype.getSquare = function(div) {
+      return this.squareList[$(div).data('id')];
     };
 
     return Puzzle;
