@@ -508,7 +508,7 @@
     };
 
     Puzzle.prototype.isSolvable = function() {
-      return isSolvable(this.map(function() {
+      return isSolvable(this.mapSquare(function() {
         return this.id;
       }), this.rows, this.cols, this.emptyRow);
     };
@@ -524,7 +524,7 @@
       }
       swapMap = {};
       squares = [];
-      this.each(function() {
+      this.eachSquare(function() {
         squares.push(this);
         return swapMap[this.id] = [this.row, this.col];
       });
@@ -537,7 +537,7 @@
         _ref1 = swapMap[id], row = _ref1[0], col = _ref1[1];
         swap.call(this.squareList[id], row, col);
       }
-      if (!isSolvable(this.map(function() {
+      if (!isSolvable(this.mapSquare(function() {
         return this.id;
       }), this.rows, this.cols, this.emptyRow)) {
         swap.call(this.squareList[0], this.squareList[1].row, this.squareList[1].col);
@@ -550,13 +550,13 @@
         return _this.trigger('shuffle');
       });
       this.status.shuffling += 1;
-      this.each(function() {
+      this.eachSquare(function() {
         return slowlyMove.call(this, this.row, this.col, once);
       });
       return this;
     };
 
-    Puzzle.prototype.each = function(callback) {
+    Puzzle.prototype.eachSquare = function(callback) {
       var col, row, _i, _j, _ref, _ref1;
       for (row = _i = 1, _ref = this.rows; 1 <= _ref ? _i <= _ref : _i >= _ref; row = 1 <= _ref ? ++_i : --_i) {
         for (col = _j = 1, _ref1 = this.cols; 1 <= _ref1 ? _j <= _ref1 : _j >= _ref1; col = 1 <= _ref1 ? ++_j : --_j) {
@@ -568,10 +568,10 @@
       return this;
     };
 
-    Puzzle.prototype.map = function(callback) {
+    Puzzle.prototype.mapSquare = function(callback) {
       var results;
       results = [];
-      this.each(function(row, col) {
+      this.eachSquare(function(row, col) {
         return results.push(callback.call(this, row, col));
       });
       return results;
@@ -596,7 +596,7 @@
       }
       bindings[event].push(handler);
       if (event !== 'shuffle' && event !== 'reset' && event !== 'done') {
-        this.each(function() {
+        this.eachSquare(function() {
           return this.bind(event, handler, one);
         });
       }
@@ -625,7 +625,7 @@
         }
       }
       if (event !== 'shuffle' && event !== 'reset' && event !== 'done') {
-        this.each(function() {
+        this.eachSquare(function() {
           return this.unbind(event, handler);
         });
       }
@@ -677,7 +677,7 @@
         swap.call(sq, sq.origRow, sq.origCol);
       }
       this.status.resetting += 1;
-      this.each(function() {
+      this.eachSquare(function() {
         return slowlyMove.call(this, this.row, this.col, once);
       });
       return this;

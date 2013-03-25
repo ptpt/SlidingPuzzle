@@ -430,7 +430,7 @@ class Puzzle
 
     # check if current situation is solvable.
     isSolvable: ->
-        return isSolvable(@map(-> @id), @rows, @cols, @emptyRow)
+        return isSolvable(@mapSquare(-> @id), @rows, @cols, @emptyRow)
 
     shuffle: (callback) ->
         if @status.shuffling > 0
@@ -443,7 +443,7 @@ class Puzzle
         # get the map from square id to its position after shuffling.
         swapMap = {}
         squares = []
-        @each(->
+        @eachSquare(->
             squares.push(this)
             swapMap[@id] = [@row, @col])
         # Fisher–Yates shuffle
@@ -457,7 +457,7 @@ class Puzzle
         for id, [row, col] of swapMap
             swap.call(@squareList[id], row, col)
 
-        if not isSolvable(@map(-> @id), @rows, @cols, @emptyRow)
+        if not isSolvable(@mapSquare(-> @id), @rows, @cols, @emptyRow)
             # swapping arbitrary 2 squares always changes the
             # odd-even status of the number of inversions.
             #
@@ -474,13 +474,13 @@ class Puzzle
         )
 
         @status.shuffling += 1
-        @each(-> slowlyMove.call(this, @row, @col, once))
+        @eachSquare(-> slowlyMove.call(this, @row, @col, once))
 
         return this
 
     # iterate through each square in the matrix (left to right, top to
     # bottom).
-    each: (callback) ->
+    eachSquare: (callback) ->
         for row in [1 .. @rows]
             for col in [1 .. @cols]
                 if not @isEmpty(row, col)
@@ -488,9 +488,9 @@ class Puzzle
 
         return this
 
-    map: (callback) ->
+    mapSquare: (callback) ->
         results = []
-        @each((row, col)-> results.push(callback.call(this, row, col)))
+        @eachSquare((row, col)-> results.push(callback.call(this, row, col)))
         return results
 
     # return if all squares are at their original places
@@ -509,7 +509,7 @@ class Puzzle
         bindings[event].push(handler)
 
         if event not in ['shuffle', 'reset', 'done']
-            @each(-> @bind(event, handler, one))
+            @eachSquare(-> @bind(event, handler, one))
 
         return this
 
@@ -524,7 +524,7 @@ class Puzzle
                     []
 
         if event not in ['shuffle', 'reset', 'done']
-            @each(-> @unbind(event, handler))
+            @eachSquare(-> @unbind(event, handler))
 
         return this
 
@@ -555,7 +555,7 @@ class Puzzle
             @trigger('reset'))
         swap.call(sq, sq.origRow, sq.origCol) for sq in @squareList
         @status.resetting += 1
-        @each(-> slowlyMove.call(this, @row, @col, once))
+        @eachSquare(-> slowlyMove.call(this, @row, @col, once))
         return this
 
 
