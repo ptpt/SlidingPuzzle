@@ -40,6 +40,37 @@ View [Demo](http://ptpt.github.com/SlidingPuzzle/).
     }).shuffle();
 ````
 
+## API
+
+````coffeescript
+    class Square(id, puzzle, row, col)
+        redraw()
+        isMovable()
+        swap(row, col, callback)
+        step(callback)
+        steps(callback)
+        bind(event, handler, one=false)
+        unbind(event, handler)
+        trigger(event)
+        one(event, handler)
+        reset(callback)
+
+    class Puzzle(div, options={})
+        rebuild()
+        render(options={})
+        isSolvable()
+        shuffle(callback)
+        eachSquare(callback)
+        mapSquare(callback)
+        isComplete()
+        isEmpty(row, col)
+        bind(event, handler, one=false)
+        unbind(event, handler)
+        one(event, handler)
+        trigger(event)
+        reset(callback)
+````
+
 ## History
 
 This was originally part of our
