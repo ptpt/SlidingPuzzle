@@ -141,6 +141,7 @@ class Square
         @bindings = {
             one: {}
             always: {}
+            proxy: {}
         }
 
         @div = $('<div></div>')
@@ -189,13 +190,13 @@ class Square
 
         return this
 
-    # bind event 'puzzle.done' and 'puzzle.step' to callback.
+    # bind event 'done' and 'step' to callback.
     stepCallback = (callback) ->
         =>
             callback?.apply(this)
-            @trigger('puzzle.step')
+            @trigger('step')
             if @board.isComplete() and @board.status.moving == 0
-                @board.trigger('puzzle.done')
+                @board.trigger('done')
 
     # shift current square if it's adjacent empty square.
     step: (callback) ->
@@ -228,6 +229,13 @@ class Square
             bindings[event] = []
         bindings[event].push(handler)
 
+        if event not in ['step']
+            @bindings.proxy[handler] = => handler.apply(this)
+            if one
+                @div.one(event, @bindings.proxy[handler])
+            else
+                @div.bind(event, @bindings.proxy[handler])
+
         return this
 
     # call all square handlers
@@ -253,6 +261,14 @@ class Square
                     (cc for cc in bindings[event] when cc isnt handler)
                 else
                     []
+
+        if event not in ['step']
+            if handler of @bindings.proxy
+                @div.off(event, @bindings.proxy[handler])
+                delete @bindings.proxy[handler]
+            else
+                @div.off(event, handler)
+
         return this
 
     one: (event, handler) ->
@@ -317,16 +333,16 @@ class Puzzle
     redraw = ->
         # redraw after shuffling, resetting, or stepping.
         if @status.shuffling > 0
-            @one('puzzle.shuffle', redraw)
+            @one('shuffle', redraw)
 
         else if @status.resetting > 0
-            @one('puzzle.reset', redraw)
+            @one('reset', redraw)
 
-        else if @status.moving > 0
+        else if @status.moving > 0 #todo
             handler = =>
                 redraw.apply(this)
-                @each(-> @unbind('puzzle.step', handler))
-            @each(-> @one('puzzle.step', handler))
+                @each(-> @unbind('step', handler))
+            @each(-> @one('step', handler))
 
         recalc.apply(this)
 
@@ -421,7 +437,7 @@ class Puzzle
 
     shuffle: (callback) ->
         if @status.shuffling > 0
-            return @one('puzzle.shuffle', Puzzle.prototype.shuffle)
+            return @one('shuffle', Puzzle.prototype.shuffle)
 
         # place empty square to the bottom right corner
         if @squareMatrix[@rows][@cols]
@@ -457,7 +473,7 @@ class Puzzle
         once = runOnceAt(@squareList.length, =>
             @status.shuffling -= 1
             callback?.apply(this)
-            @trigger('puzzle.shuffle')
+            @trigger('shuffle')
         )
 
         @status.shuffling += 1
@@ -490,9 +506,13 @@ class Puzzle
     # bind jQuery events or specific puzzle events
     bind: (event, handler, one=false) ->
         bindings = if one then @bindings.one else @bindings.always
+
         if event not of bindings
             bindings[event] = []
         bindings[event].push(handler)
+
+        if event not in ['shuffle', 'reset', 'done']
+            @each(-> @bind(event, handler, one))
 
         return this
 
@@ -505,6 +525,10 @@ class Puzzle
                     (cc for cc in bindings[event] when cc isnt handler)
                 else
                     []
+
+        if event not in ['shuffle', 'reset', 'done']
+            @each(-> @unbind(event, handler))
+
         return this
 
     # handler runs at most one time.
@@ -531,7 +555,7 @@ class Puzzle
         once = runOnceAt(@squareList.length, =>
             @status.resetting -= 1
             callback?.apply(this)
-            @trigger('puzzle.reset'))
+            @trigger('reset'))
         swap.call(sq, sq.origRow, sq.origCol) for sq in @squareList
         @status.resetting += 1
         @each(-> slowlyMove.call(this, @row, @col, once))
