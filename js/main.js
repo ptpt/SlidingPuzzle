@@ -69,10 +69,10 @@ $(function () {
     $('#background').click(function () {
         if (game.image === 'url(img/gavle.jpg)') {
             $('#puzzle').width(720).height(480);
-            game.set({image: 'url(img/lake.jpg)', spacing: 2});
+            game.render({image: 'url(img/lake.jpg)', spacing: 2});
         } else {
             $('#puzzle').width(800).height(600);
-            game.set({image: 'url(img/gavle.jpg)', spacing: 4});
+            game.render({image: 'url(img/gavle.jpg)', spacing: 4});
         }
 
 
@@ -80,28 +80,28 @@ $(function () {
 
     $('#rows-inc').click(function () {
         if (game.rows < MAX_ROW) {
-            game.set({rows: game.rows + 1});
+            game.render({rows: game.rows + 1});
             game.shuffle();
         }
     });
 
     $('#rows-dec').click(function () {
         if (game.rows > 2) {
-            game.set({rows: game.rows - 1});
+            game.render({rows: game.rows - 1});
             game.shuffle();
         }
     });
 
     $('#cols-inc').click(function () {
         if (game.cols < MAX_COL) {
-            game.set({cols: game.cols + 1});
+            game.render({cols: game.cols + 1});
             game.shuffle();
         }
     });
 
     $('#cols-dec').click(function () {
         if (game.cols > 2) {
-            game.set({cols: game.cols - 1});
+            game.render({cols: game.cols - 1});
             game.shuffle();
         }
     });
