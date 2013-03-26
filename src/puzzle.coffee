@@ -77,11 +77,15 @@ slowlyMove = (row, col, callback) ->
         width: getWidth.call(@puzzle, col)
     }
 
-    if @origCol == @puzzle.cols
-        css['background-position-x'] = getPosX.call(@puzzle, @origCol, col)
-
-    if @origRow == @puzzle.rows
-        css['background-position-y'] = getPosY.call(@puzzle, @origRow, row)
+    if @origCol == @puzzle.cols or @origRow == @puzzle.rows
+        posX = getPosX.call(@puzzle, @origCol, col)
+        posY = getPosY.call(@puzzle, @origRow, row)
+        # firefox uses background-position
+        css['background-position'] = "#{ posX.toString() }px #{ posY.toString() }px"
+        if @origCol == @puzzle.cols
+            css['background-position-x'] = posX
+        if @origRow == @puzzle.rows
+            css['background-position-y'] = posY
 
     moveCallback = =>
         @puzzle.status.moving -= 1
@@ -153,6 +157,8 @@ class Square
 
     # re-apply CSS attributes.
     redraw: ->
+        posX = getPosX.call(@puzzle, @origCol, @col)
+        posY = getPosY.call(@puzzle, @origRow, @row)
         css = {
             position: 'absolute'
             left: getLeft.call(@puzzle, @col)
@@ -160,8 +166,10 @@ class Square
             width: getWidth.call(@puzzle, @col)
             height: getHeight.call(@puzzle, @row)
             'background-image': @puzzle.image
-            'background-position-x': getPosX.call(@puzzle, @origCol, @col)
-            'background-position-y': getPosY.call(@puzzle, @origRow, @row)
+            'background-position-x': posX
+            'background-position-y': posY
+            # firefox uses background-position
+            'background-position': "#{ posX.toString() }px #{ posY.toString() }px"
         }
 
         @div.css(css)
