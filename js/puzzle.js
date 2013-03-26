@@ -89,7 +89,7 @@
   };
 
   slowlyMove = function(row, col, callback) {
-    var css, moveCallback,
+    var css, moveCallback, posX, posY,
       _this = this;
     css = {
       left: getLeft.call(this.puzzle, col),
@@ -97,11 +97,16 @@
       height: getHeight.call(this.puzzle, row),
       width: getWidth.call(this.puzzle, col)
     };
-    if (this.origCol === this.puzzle.cols) {
-      css['background-position-x'] = getPosX.call(this.puzzle, this.origCol, col);
-    }
-    if (this.origRow === this.puzzle.rows) {
-      css['background-position-y'] = getPosY.call(this.puzzle, this.origRow, row);
+    if (this.origCol === this.puzzle.cols || this.origRow === this.puzzle.rows) {
+      posX = getPosX.call(this.puzzle, this.origCol, col);
+      posY = getPosY.call(this.puzzle, this.origRow, row);
+      css['background-position'] = "" + (posX.toString()) + "px " + (posY.toString()) + "px";
+      if (this.origCol === this.puzzle.cols) {
+        css['background-position-x'] = posX;
+      }
+      if (this.origRow === this.puzzle.rows) {
+        css['background-position-y'] = posY;
+      }
     }
     moveCallback = function() {
       _this.puzzle.status.moving -= 1;
@@ -164,7 +169,9 @@
     }
 
     Square.prototype.redraw = function() {
-      var css;
+      var css, posX, posY;
+      posX = getPosX.call(this.puzzle, this.origCol, this.col);
+      posY = getPosY.call(this.puzzle, this.origRow, this.row);
       css = {
         position: 'absolute',
         left: getLeft.call(this.puzzle, this.col),
@@ -172,8 +179,9 @@
         width: getWidth.call(this.puzzle, this.col),
         height: getHeight.call(this.puzzle, this.row),
         'background-image': this.puzzle.image,
-        'background-position-x': getPosX.call(this.puzzle, this.origCol, this.col),
-        'background-position-y': getPosY.call(this.puzzle, this.origRow, this.row)
+        'background-position-x': posX,
+        'background-position-y': posY,
+        'background-position': "" + (posX.toString()) + "px " + (posY.toString()) + "px"
       };
       this.div.css(css);
       return this;
