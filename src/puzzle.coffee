@@ -77,18 +77,21 @@ slowlyMove = (row, col, callback) ->
         width: getWidth.call(@puzzle, col)
     }
 
-    if @origCol == @puzzle.cols or @origRow == @puzzle.rows
-        posX = getPosX.call(@puzzle, @origCol, col)
-        posY = getPosY.call(@puzzle, @origRow, row)
-        # firefox uses background-position
-        css['background-position'] = "#{ posX.toString() }px #{ posY.toString() }px"
-        if @origCol == @puzzle.cols
-            css['background-position-x'] = posX
-        if @origRow == @puzzle.rows
-            css['background-position-y'] = posY
-
     moveCallback = =>
         @puzzle.status.moving -= 1
+
+        if @origCol == @puzzle.cols or @origRow == @puzzle.rows
+            posX = getPosX.call(@puzzle, @origCol, col)
+            posY = getPosY.call(@puzzle, @origRow, row)
+            css = {}
+            # firefox uses background-position
+            css['background-position'] = "#{ posX.toString() }px #{ posY.toString() }px"
+            if @origCol == @puzzle.cols
+                css['background-position-x'] = posX
+            if @origRow == @puzzle.rows
+                css['background-position-y'] = posY
+            @div.css(css)
+
         callback?.apply(this)
 
     @puzzle.status.moving += 1
