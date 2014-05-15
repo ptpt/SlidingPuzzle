@@ -201,13 +201,13 @@ class Square
 
         return this
 
-    # bind event 'done' and 'step' to callback.
+    # bind event 'complete' and 'step' to callback.
     stepCallback = (callback) ->
         =>
             callback?.apply(this)
             @trigger('step')
             if @puzzle.complete() and @puzzle.status.moving == 0
-                @puzzle.trigger('done')
+                @puzzle.trigger('complete')
 
     # shift current square if it's adjacent empty square.
     step: (callback) ->
@@ -519,7 +519,7 @@ class Puzzle
             bindings[event] = []
         bindings[event].push(handler)
 
-        if event not in ['shuffle', 'reset', 'done']
+        if event not in ['shuffle', 'reset', 'complete']
             @eachSquare(-> @bind(event, handler, one))
 
         return this
@@ -534,7 +534,7 @@ class Puzzle
                 else
                     []
 
-        if event not in ['shuffle', 'reset', 'done']
+        if event not in ['shuffle', 'reset', 'complete']
             @eachSquare(-> @unbind(event, handler))
 
         return this

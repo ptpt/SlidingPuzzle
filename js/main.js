@@ -40,7 +40,7 @@ $(function () {
         }
     };
 
-    done = function () {
+    complete = function () {
         timer.end();
         alert('Total time: ' + timer.totalSeconds() + ' seconds\n'
               + 'Steps: ' + $('#steps').text());
@@ -51,7 +51,7 @@ $(function () {
 
     game.bind('shuffle', function () {
         timer.start();
-        game.unbind('done', done).one('done', done);
+        game.unbind('complete', complete).one('complete', complete);
         game.unbind('click', click).bind('click', click);
         game.div.css({'background-color': 'black',
                       'border-color': 'black'});

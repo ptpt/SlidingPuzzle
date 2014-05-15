@@ -35,7 +35,7 @@ View [Demo](http://ptpt.github.com/SlidingPuzzle/).
 ````javascript
     game.bind('click', function () {
         this.steps();
-    }).bind('done', function () {
+    }).bind('complete', function () {
         alert('Well done!');
     }).shuffle();
 ````
