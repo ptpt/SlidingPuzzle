@@ -179,7 +179,7 @@ class Square
         return this
 
     # return if square is movable.
-    isMovable: ->
+    movable: ->
         # square is movable only if it is adjacent to the empty square.
         if @puzzle.emptyCol == @col
             movable = @puzzle.emptyRow == @row - 1 or @puzzle.emptyRow - 1 == @row
@@ -211,7 +211,7 @@ class Square
 
     # shift current square if it's adjacent empty square.
     step: (callback) ->
-        if @isMovable()
+        if @movable()
             callback = stepCallback.call(this, callback)
             @swap(@puzzle.emptyRow, @puzzle.emptyCol, callback)
         return this

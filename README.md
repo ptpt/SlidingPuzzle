@@ -45,7 +45,7 @@ View [Demo](http://ptpt.github.com/SlidingPuzzle/).
 ````coffeescript
     class Square(id, puzzle, row, col)
         redraw()
-        isMovable()
+        movable()
         swap(row, col, callback)
         step(callback)
         steps(callback)
