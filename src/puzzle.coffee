@@ -494,7 +494,7 @@ class Puzzle
     eachSquare: (callback) ->
         for row in [1 .. @rows]
             for col in [1 .. @cols]
-                if not @isEmpty(row, col)
+                if not @empty(row, col)
                     callback.call(@squareMatrix[row][col], row, col)
 
         return this
@@ -508,7 +508,7 @@ class Puzzle
     complete: ->
         return @incompletions == 0
 
-    isEmpty: (row, col) ->
+    empty: (row, col) ->
         return not @squareMatrix[row][col]?
 
     # bind jQuery events or specific puzzle events

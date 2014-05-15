@@ -63,7 +63,7 @@ View [Demo](http://ptpt.github.com/SlidingPuzzle/).
         eachSquare(callback)
         mapSquare(callback)
         complete()
-        isEmpty(row, col)
+        empty(row, col)
         bind(event, handler, one=false)
         unbind(event, handler)
         one(event, handler)
