@@ -431,7 +431,7 @@ class Puzzle
 
         return this
 
-    isSolvable = (array, rows, cols, emptyRow) ->
+    solvable = (array, rows, cols, emptyRow) ->
         # http://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
         # ( (grid width odd) && (#inversions even) )  ||
         # ( (grid width even) && ((blank on odd row from bottom) == (#inversions even)) )
@@ -440,8 +440,8 @@ class Puzzle
             ((cols % 2 == 0) and ((rows - emptyRow + 1) % 2 != inversions % 2))
 
     # check if current situation is solvable.
-    isSolvable: ->
-        return isSolvable(@mapSquare(-> @id), @rows, @cols, @emptyRow)
+    solvable: ->
+        return solvable(@mapSquare(-> @id), @rows, @cols, @emptyRow)
 
     shuffle: (callback) ->
         if @status.shuffling > 0
@@ -468,7 +468,7 @@ class Puzzle
         for id, [row, col] of swapMap
             swap.call(@squareList[id], row, col)
 
-        if not isSolvable(@mapSquare(-> @id), @rows, @cols, @emptyRow)
+        if not solvable(@mapSquare(-> @id), @rows, @cols, @emptyRow)
             # swapping arbitrary 2 squares always changes the
             # odd-even status of the number of inversions.
             #

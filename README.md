@@ -58,7 +58,7 @@ View [Demo](http://ptpt.github.com/SlidingPuzzle/).
     class Puzzle(div, options={})
         rebuild()
         render(options={})
-        isSolvable()
+        solvable()
         shuffle(callback)
         eachSquare(callback)
         mapSquare(callback)
