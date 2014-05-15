@@ -206,7 +206,7 @@ class Square
         =>
             callback?.apply(this)
             @trigger('step')
-            if @puzzle.isComplete() and @puzzle.status.moving == 0
+            if @puzzle.complete() and @puzzle.status.moving == 0
                 @puzzle.trigger('done')
 
     # shift current square if it's adjacent empty square.
@@ -505,7 +505,7 @@ class Puzzle
         return results
 
     # return if all squares are at their original places
-    isComplete: ->
+    complete: ->
         return @incompletions == 0
 
     isEmpty: (row, col) ->
