@@ -570,7 +570,119 @@ class Puzzle
         return this
 
 
-# jQuery plugin
-do ($=jQuery) ->
-    $.fn.puzzle = (options) ->
-        puzzle = new Puzzle(this, options)
+solvable = (array, rows, cols, emptyRow) ->
+    # http://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
+    # ( (grid width odd) && (#inversions even) )  ||
+    # ( (grid width even) && ((blank on odd row from bottom) == (#inversions even)) )
+    inversions = countInversions(array)
+    return ((cols % 2 != 0) and (inversions % 2 == 0)) or
+        ((cols % 2 == 0) and ((rows - emptyRow + 1) % 2 != inversions % 2))
+
+
+class Sliding
+    arg2pos = (pos) ->
+        if arguments.length > 1
+            pos = [arguments[0], arguments[1]]
+        else
+            pos = if @position[pos]? then @position[pos] else pos
+        return pos
+
+    constructor: (rows, cols, emptyPos) ->
+        if not rows >= 1
+            throw RangeError('At least 1 row is required')
+        if not cols >= 1
+            throw RangeError('At least 1 col is required')
+
+        emptyPos = [
+            if emptyPos and emptyPos[0]? then emptyPos[0] else rows - 1
+            if emptyPos and emptyPos[1]? then emptyPos[1] else cols - 1
+        ]
+
+        if not (0 <= emptyPos[0] < rows)
+            throw RangeError('Invalid empty row')
+        if not (0 <= emptyPos[1] < cols)
+            throw RangeError('Invalid empty col')
+
+        @rows = rows
+        @cols = cols
+        @emptyPos = emptyPos
+        @originalEmtpyPos = [emptyPos[0], emptyPos[1]]
+        @grid = []
+        @position = []
+        @position[0] = [@emptyPos[0], @emptyPos[1]]
+        id = 1
+        for row in [0..rows-1]
+            @grid[row] = []
+            for col in [0..cols-1]
+                if row == @emptyPos[0] and col == @emptyPos[1]
+                    @grid[row][col] = 0
+                else
+                    @grid[row][col] = id
+                    @position[id] = [row, col]
+                    id += 1
+
+        @incompletions = 0
+        @inversions = 0
+
+        return @
+
+    solvable: (pos) ->
+        return solvable(@squares, @rows, @cols, @emptyRow)
+
+    completed: ->
+        return @incompletions == 0
+
+    shuffle: ->
+        for last in [@rows*@cols-1 .. 0]
+            rand = Math.floor(Math.random() * (last + 1))
+            @swap(last, rand)
+        if not @solvable()
+            @swap(0, 1)
+
+        return @
+
+    swap: (p1, p2) ->
+        [y1, x1] = p1
+        [y2, x2] = p2
+        if x1 == x2 and y1 == y2
+            return @
+
+        id1 = @grid[y1][x1]
+        id2 = @grid[y2][x2]
+        @grid[y1][x1] = id2
+        @grid[y2][x2] = id1
+        @position[id1] = p2
+        @emptyPos = p2 if id1 == 0
+        @position[id2] = p1
+        @emptyPos = p1 if id2 == 0
+
+        return @
+
+    slide: (pos) ->
+        pos = arg2pos.apply(this, arguments)
+        if not @slidable(pos)
+            return @
+        if pos[0] == @emptyPos[0]
+            for col in [@emptyPos[1]..pos[1]]
+                @swap([pos[0], col], @emptyPos)
+        else if pos[1] == @emptyPos[1]
+            for row in [@emptyPos[0]..pos[0]]
+                @swap([row, pos[1]], @emptyPos)
+        return @
+
+    slidable: (pos) ->
+        pos = arg2pos.apply(this, arguments)
+        return (0 <= pos[0] < @rows and 0 <= pos[1] < @cols) and
+            not (pos[0] == @emptyPos[0] and pos[1] == @emptyPos[1]) and
+            (pos[0] == @emptyPos[0] or pos[1] == @emptyPos[1])
+
+
+if typeof jQuery != 'undefined'
+    # jQuery plugin
+    do ($=jQuery) ->
+        $.fn.puzzle = (options) ->
+            puzzle = new Puzzle(this, options)
+
+
+if module
+    module.exports = {Sliding: Sliding}
