@@ -102,11 +102,11 @@ describe 'Sliding', ->
         expect(s.completed()).to.be.true
         s.slide(0)              # nothing changes
         expect(s.completed()).to.be.true
-        s.slide(2, 0)
+        s.slide([2, 0])
         expect(s.completed()).to.be.false
-        s.slide(2, 2)
+        s.slide([2, 2])
         expect(s.completed()).to.be.true
 
         s = new Sliding(1, 1)
-        s.slide(1, 1).shuffle()
+        s.slide([1, 1]).shuffle()
         expect(s.completed()).to.be.true

@@ -574,14 +574,11 @@ isArray = (obj) ->
     toString.call(obj) == '[object Array]'
 
 
-class Sliding
-    arg2pos = (pos) ->
-        if arguments.length > 1
-            pos = [arguments[0], arguments[1]]
-        else if not isArray(pos)
-            pos = @position[pos]
-        return pos
+toPos = (posOrID) ->
+    return if isArray(posOrID) then posOrID else @position[posOrID]
 
+
+class Sliding
     # Count inversions of an array.
     # This will be used to check if a situation is solvable.
     countInversions = (array, emptyID, start, end) ->
@@ -676,7 +673,7 @@ class Sliding
     completed: ->
         return @incompletions == 0
 
-    shuffle: ->
+    shuffle: (handler) ->
         for lastID in [@rows*@cols-1 .. 0]
             if lastID == @emptyID
                 continue
@@ -684,15 +681,19 @@ class Sliding
             if randID == @emptyID
                 randID += 1
             console.assert randID <= lastID
+            handler?.call(@, lastID, randID)
             @swap(lastID, randID)
 
         if not @solvable()
             console.assert @rows * @cols > 2, 'It is impossible to be unsolvable'
             if @emptyID == 0
+                handler?.call(@, 1, 2)
                 @swap(1, 2)
             else if @emptyID == 1
+                handler?.call(@, 0, 2)
                 @swap(0, 2)
             else
+                handler?.call(@, 0, 1)
                 @swap(0, 1)
 
         return @
@@ -701,8 +702,8 @@ class Sliding
         return [Math.floor(id / cols), id % cols]
 
     swap: (p1, p2) ->
-        [y1, x1] = arg2pos.call(@, p1)
-        [y2, x2] = arg2pos.call(@, p2)
+        [y1, x1] = toPos.call(@, p1)
+        [y2, x2] = toPos.call(@, p2)
         if x1 == x2 and y1 == y2
             return @
 
@@ -723,19 +724,21 @@ class Sliding
 
         return @
 
-    slide: (pos) ->
-        [row, col] = arg2pos.apply(this, arguments)
-        if not @slidable(row, col)
+    slide: (pos, handler) ->
+        if not @slidable(pos)
             return @
+        [row, col] = toPos.call(@, pos)
         [erow, ecol] = @position[@emptyID]
         if row == erow
+            handler?.call(@, @grid[row][c], @emptyID)
             @swap([row, c], @emptyID) for c in [ecol..col]
         else if col == ecol
+            handler?.call(@, @grid[r][col], @emptyID)
             @swap([r, col], @emptyID) for r in [erow..row]
         return @
 
     slidable: (pos) ->
-        [row, col] = arg2pos.apply(this, arguments)
+        [row, col] = toPos.call(@, pos)
         [erow, ecol] = @position[@emptyID]
         return (0 <= row < @rows and 0 <= col < @cols) and
             not (row == erow and col == ecol) and
