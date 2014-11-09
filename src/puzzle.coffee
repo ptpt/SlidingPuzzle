@@ -570,22 +570,68 @@ class Puzzle
         return this
 
 
-solvable = (array, rows, cols, emptyRow) ->
-    # http://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
-    # ( (grid width odd) && (#inversions even) )  ||
-    # ( (grid width even) && ((blank on odd row from bottom) == (#inversions even)) )
-    inversions = countInversions(array)
-    return ((cols % 2 != 0) and (inversions % 2 == 0)) or
-        ((cols % 2 == 0) and ((rows - emptyRow + 1) % 2 != inversions % 2))
+isArray = (obj) ->
+    toString.call(obj) == '[object Array]'
 
 
 class Sliding
     arg2pos = (pos) ->
         if arguments.length > 1
             pos = [arguments[0], arguments[1]]
-        else
-            pos = if @position[pos]? then @position[pos] else pos
+        else if not isArray(pos)
+            pos = @position[pos]
         return pos
+
+    # Count inversions of an array.
+    # This will be used to check if a situation is solvable.
+    countInversions = (array, emptyID, start, end) ->
+        start = if start? then start else 0
+        end = if end? then end else array.length - 1
+        if start > end
+            return [0, []]
+        else if start == end
+            if isArray(array[start])
+                return countInversions(array[start], emptyID)
+            else
+                # skip emptyID
+                return if array[start] == emptyID then [0, []] else [0, [array[start]]]
+
+        # split
+        middle = Math.floor(start + (end - start) / 2)
+        [leftCount, leftSortedArray] = countInversions(array, emptyID, start, middle)
+        [rightCount, rightSortedArray] = countInversions(array, emptyID, middle+1, end)
+
+        l = 0
+        r = 0
+        count = 0
+        sortedArray = []
+
+        # start merging and counting
+        while l < leftSortedArray.length and r < rightSortedArray.length
+            if leftSortedArray[l] <= rightSortedArray[r]
+                sortedArray.push(leftSortedArray[l])
+                l += 1
+            else
+                sortedArray.push(rightSortedArray[r])
+                count += leftSortedArray.length - l
+                r += 1
+
+        while l < leftSortedArray.length
+            sortedArray.push(leftSortedArray[l])
+            l += 1
+
+        while r < rightSortedArray.length
+            sortedArray.push(rightSortedArray[r])
+            r += 1
+
+        return [leftCount + count + rightCount, sortedArray]
+
+    solvable = (inversions, rows, cols, emptyRow) ->
+        # http://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
+        # ( (grid width odd) && (#inversions even) )  ||
+        # ( (grid width even) && ((blank on odd row from bottom) == (#inversions even)) )
+        return ((cols % 2 != 0) and (inversions % 2 == 0)) or
+            ((cols % 2 == 0) and ((rows - emptyRow + 1) % 2 != inversions % 2))
 
     constructor: (rows, cols, emptyPos) ->
         if not rows >= 1
@@ -605,45 +651,58 @@ class Sliding
 
         @rows = rows
         @cols = cols
-        @emptyPos = emptyPos
-        @originalEmtpyPos = [emptyPos[0], emptyPos[1]]
         @grid = []
         @position = []
-        @position[0] = [@emptyPos[0], @emptyPos[1]]
-        id = 1
-        for row in [0..rows-1]
+
+        id = 0
+        for row in [0 .. rows-1]
             @grid[row] = []
-            for col in [0..cols-1]
-                if row == @emptyPos[0] and col == @emptyPos[1]
-                    @grid[row][col] = 0
-                else
-                    @grid[row][col] = id
-                    @position[id] = [row, col]
-                    id += 1
+            for col in [0 .. cols-1]
+                @grid[row][col] = id
+                @position[id] = [row, col]
+                @emptyID = id if row == emptyPos[0] and col == emptyPos[1]
+                id += 1
+        console.assert @emptyID?
 
         @incompletions = 0
-        @inversions = 0
 
         return @
 
     solvable: (pos) ->
-        return solvable(@squares, @rows, @cols, @emptyRow)
+        [erow, _] = @position[@emptyID]
+        [inversions, _] = countInversions(@grid, @emptyID)
+        return solvable(inversions, @rows, @cols, erow + 1)
 
     completed: ->
         return @incompletions == 0
 
     shuffle: ->
-        for last in [@rows*@cols-1 .. 0]
-            rand = Math.floor(Math.random() * (last + 1))
-            @swap(last, rand)
+        for lastID in [@rows*@cols-1 .. 0]
+            if lastID == @emptyID
+                continue
+            randID = Math.floor(Math.random() * (lastID + 1))
+            if randID == @emptyID
+                randID += 1
+            console.assert randID <= lastID
+            @swap(lastID, randID)
+
         if not @solvable()
-            @swap(0, 1)
+            console.assert @rows * @cols > 2, 'It is impossible to be unsolvable'
+            if @emptyID == 0
+                @swap(1, 2)
+            else if @emptyID == 1
+                @swap(0, 2)
+            else
+                @swap(0, 1)
 
         return @
 
+    origin = (id, cols) ->
+        return [Math.floor(id / cols), id % cols]
+
     swap: (p1, p2) ->
-        [y1, x1] = p1
-        [y2, x2] = p2
+        [y1, x1] = arg2pos.call(@, p1)
+        [y2, x2] = arg2pos.call(@, p2)
         if x1 == x2 and y1 == y2
             return @
 
@@ -651,30 +710,36 @@ class Sliding
         id2 = @grid[y2][x2]
         @grid[y1][x1] = id2
         @grid[y2][x2] = id1
-        @position[id1] = p2
-        @emptyPos = p2 if id1 == 0
-        @position[id2] = p1
-        @emptyPos = p1 if id2 == 0
+        @position[id1] = [y2, x2]
+        @position[id2] = [y1, x1]
+
+        [oy, ox] = origin(id1, @cols)
+        @incompletions += 1 if oy == y1 and ox == x1
+        @incompletions -= 1 if oy == y2 and ox == x2
+
+        [oy, ox] = origin(id2, @cols)
+        @incompletions += 1 if oy == y2 and ox == x2
+        @incompletions -= 1 if oy == y1 and ox == x1
 
         return @
 
     slide: (pos) ->
-        pos = arg2pos.apply(this, arguments)
-        if not @slidable(pos)
+        [row, col] = arg2pos.apply(this, arguments)
+        if not @slidable(row, col)
             return @
-        if pos[0] == @emptyPos[0]
-            for col in [@emptyPos[1]..pos[1]]
-                @swap([pos[0], col], @emptyPos)
-        else if pos[1] == @emptyPos[1]
-            for row in [@emptyPos[0]..pos[0]]
-                @swap([row, pos[1]], @emptyPos)
+        [erow, ecol] = @position[@emptyID]
+        if row == erow
+            @swap([row, c], @emptyID) for c in [ecol..col]
+        else if col == ecol
+            @swap([r, col], @emptyID) for r in [erow..row]
         return @
 
     slidable: (pos) ->
-        pos = arg2pos.apply(this, arguments)
-        return (0 <= pos[0] < @rows and 0 <= pos[1] < @cols) and
-            not (pos[0] == @emptyPos[0] and pos[1] == @emptyPos[1]) and
-            (pos[0] == @emptyPos[0] or pos[1] == @emptyPos[1])
+        [row, col] = arg2pos.apply(this, arguments)
+        [erow, ecol] = @position[@emptyID]
+        return (0 <= row < @rows and 0 <= col < @cols) and
+            not (row == erow and col == ecol) and
+            (row == erow or col == ecol)
 
 
 if typeof jQuery != 'undefined'
