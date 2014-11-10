@@ -574,8 +574,8 @@ isArray = (obj) ->
     toString.call(obj) == '[object Array]'
 
 
-toPos = (posOrID) ->
-    return if isArray(posOrID) then posOrID else @position[posOrID]
+toPos = (posid) ->
+    return if isArray(posid) then posid else @position[posid]
 
 
 class Sliding
@@ -665,7 +665,7 @@ class Sliding
 
         return @
 
-    solvable: (pos) ->
+    solvable: ->
         [erow, _] = @position[@emptyID]
         [inversions, _] = countInversions(@grid, @emptyID)
         return solvable(inversions, @rows, @cols, erow + 1)
@@ -724,10 +724,10 @@ class Sliding
 
         return @
 
-    slide: (pos, handler) ->
-        if not @slidable(pos)
+    slide: (posid, handler) ->
+        if not @slidable(posid)
             return @
-        [row, col] = toPos.call(@, pos)
+        [row, col] = toPos.call(@, posid)
         [erow, ecol] = @position[@emptyID]
         if row == erow
             handler?.call(@, @grid[row][c], @emptyID)
@@ -737,8 +737,8 @@ class Sliding
             @swap([r, col], @emptyID) for r in [erow..row]
         return @
 
-    slidable: (pos) ->
-        [row, col] = toPos.call(@, pos)
+    slidable: (posid) ->
+        [row, col] = toPos.call(@, posid)
         [erow, ecol] = @position[@emptyID]
         return (0 <= row < @rows and 0 <= col < @cols) and
             not (row == erow and col == ecol) and
