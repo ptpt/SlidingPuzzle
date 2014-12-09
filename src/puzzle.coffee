@@ -4,7 +4,11 @@ isArray = (obj) ->
 
 
 toPos = (posid) ->
-    return if isArray(posid) then posid else @position[posid]
+    if isArray(posid) then posid else @position[posid]
+
+
+origin = (id, cols) ->
+    [Math.floor(id / cols), id % cols]
 
 
 class Sliding
@@ -126,9 +130,6 @@ class Sliding
                 @swap(0, 1)
 
         return @
-
-    origin = (id, cols) ->
-        return [Math.floor(id / cols), id % cols]
 
     swap: (p1, p2) ->
         [y1, x1] = toPos.call(@, p1)
