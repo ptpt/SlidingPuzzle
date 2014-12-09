@@ -13,30 +13,30 @@ origin = (id, cols) ->
 
 class Sliding
     # Count inversions of an array.
-    # This will be used to check if a situation is solvable.
-    countInversions = (array, emptyID, start, end) ->
+    # It will be used to check if a situation is solvable.
+    _countInversions: (array, start, end) ->
         start = if start? then start else 0
         end = if end? then end else array.length - 1
         if start > end
             return [0, []]
         else if start == end
             if isArray(array[start])
-                return countInversions(array[start], emptyID)
+                return @_countInversions(array[start])
             else
                 # skip emptyID
-                return if array[start] == emptyID then [0, []] else [0, [array[start]]]
+                return if array[start] == @emptyID then [0, []] else [0, [array[start]]]
 
-        # split
+        # Split
         middle = Math.floor(start + (end - start) / 2)
-        [leftCount, leftSortedArray] = countInversions(array, emptyID, start, middle)
-        [rightCount, rightSortedArray] = countInversions(array, emptyID, middle+1, end)
+        [leftCount, leftSortedArray] = @_countInversions(array, start, middle)
+        [rightCount, rightSortedArray] = @_countInversions(array, middle+1, end)
 
         l = 0
         r = 0
         count = 0
         sortedArray = []
 
-        # start merging and counting
+        # Start merging and counting
         while l < leftSortedArray.length and r < rightSortedArray.length
             if leftSortedArray[l] <= rightSortedArray[r]
                 sortedArray.push(leftSortedArray[l])
@@ -92,7 +92,6 @@ class Sliding
                 @position[id] = [row, col]
                 @emptyID = id if row == emptyPos[0] and col == emptyPos[1]
                 id += 1
-        console.assert @emptyID?
 
         @incompletions = 0
 
@@ -100,7 +99,7 @@ class Sliding
 
     solvable: ->
         [erow, _] = @position[@emptyID]
-        [inversions, _] = countInversions(@grid, @emptyID)
+        [inversions, _] = @_countInversions(@grid)
         return solvable(inversions, @rows, @cols, erow + 1)
 
     completed: ->
