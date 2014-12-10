@@ -177,6 +177,22 @@ class Sliding
             not (row == erow and col == ecol) and
             (row == erow or col == ecol)
 
+    mapPos: (f) ->
+        results = []
+        for row in [0 .. @rows - 1]
+            for col in [0 .. @cols - 1]
+                if @grid[row][col] != @emptyID
+                    results.push f.call(@, [row, col])
+        return results
+
+    mapID: (f) ->
+        results = []
+        for id in [0 .. @rows * @cols - 1]
+            if id != @emptyID
+                results.push f.call(@, id)
+        return results
+
+
 
 if typeof jQuery != 'undefined'
     # jQuery plugin
