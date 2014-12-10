@@ -1,3 +1,4 @@
+'use strict'
 
 isArray = (obj) ->
     toString.call(obj) == '[object Array]'
@@ -106,13 +107,12 @@ class Sliding
         return @incompletions == 0
 
     shuffle: (handler) ->
-        for lastID in [@rows*@cols-1 .. 0]
+        for lastID in [@rows * @cols - 1 .. 0]
             if lastID == @emptyID
                 continue
             randID = Math.floor(Math.random() * (lastID + 1))
             if randID == @emptyID
                 randID += 1
-            console.assert randID <= lastID
             handler?.call(@, lastID, randID)
             @swap(lastID, randID)
 
@@ -193,13 +193,106 @@ class Sliding
         return results
 
 
+class SimpleSliding
+    base = Sliding
 
-if typeof jQuery != 'undefined'
-    # jQuery plugin
-    do ($=jQuery) ->
-        $.fn.puzzle = (options) ->
-            puzzle = new Puzzle(this, options)
+    createSquare = (id) ->
+        square = document.createElement('div')
+        square.setAttribute('data-id', id)
+        square.style.position = 'absolute';
+        return square
+
+    constructor:  ->
+        base.apply(@, arguments)
+
+    SimpleSliding.prototype = Object.create(base.prototype)
+    SimpleSliding.prototype.constructor = SimpleSliding
+
+    _getWidth: (col) ->
+        return if col < @colResidual then @sqWidth + 1 else @sqWidth
+
+    _getHeight: (row) ->
+        return if row < @rowResidual then @sqHeight + 1 else @sqHeight
+
+    _getLeft: (col) ->
+        baseLeft = col * (@sqWidth + @spacing)
+        residual = if col < @colResidual then col else @colResidual
+        return baseLeft + residual
+
+    _getTop: (row) ->
+        baseTop = row * (@sqHeight + @spacing)
+        residual = if row < @rowResidual then row else @rowResidual
+        return baseTop + residual
+
+    _getBackgroundX: (origCol, col) ->
+        x = -1 * @_getLeft(origCol)
+        x += 1 if origCol == @cols - 1 and col < @colResidual
+        return x
+
+    _getBackgroundY: (origRow, row) ->
+        y = -1 * @_getTop(origRow)
+        y += 1 if origRow == @rows - 1 and row < @rowResidual
+        return y
+
+    _putSquare: (id, posid) ->
+        posid = if posid? then posid else id
+        [row, col] = toPos.call(@, posid)
+        style = @squares[id].style
+        style.left = @_getLeft(col) + 'px'
+        style.top = @_getTop(row) + 'px'
+        style.width = @_getWidth(col) + 'px'
+        style.height = @_getHeight(row) + 'px'
+        [orow, ocol] = origin(id, @cols)
+        style.backgroundPosition = "#{ @_getBackgroundX(ocol, col) }px #{ @_getBackgroundY(orow, row) }px"
+
+        return @
+
+    render: (element, spacing) ->
+        if element?
+            board = document.createElement('div')
+            board.style.position = 'relative';
+            board.style.width = '100%';
+            board.style.height = '100%';
+            element.appendChild(board)
+            @board = board
+            @element = element
+
+        @spacing = spacing if spacing?
+        @spacing = 0 if not @spacing?
+
+        boardHeight = @board.clientHeight - @spacing * (@rows - 1)
+        boardWidth = @board.clientWidth - @spacing * (@cols - 1)
+        @sqWidth = Math.floor(boardWidth / @cols)
+        @sqHeight = Math.floor(boardHeight / @rows)
+        @colResidual = boardWidth % @cols
+        @rowResidual = boardHeight % @rows
+
+        @squares = @mapID(createSquare) if element?
+
+        for id, square of @squares
+            @board.appendChild(square) if element?
+            @_putSquare(id)
+
+        return @
+
+    shuffle: ->
+        return base.prototype.shuffle.call(@, (src, tar) =>
+            @_putSquare(src, tar)
+            @_putSquare(tar, src))
+
+    slide: (posid) ->
+        return base.prototype.slide.call(@, posid, (src, tar) =>
+            console.assert(tar == @emptyID, 'Target must be the empty square')
+            @_putSquare(src, tar))
 
 
-if module
-    module.exports = {Sliding: Sliding}
+if module? and module.exports?
+    module.exports = {
+        Sliding: Sliding
+        SimpleSliding: SimpleSliding
+    }
+
+
+if window?
+    window.Sliding = Sliding
+    window.SimpleSliding = SimpleSliding
