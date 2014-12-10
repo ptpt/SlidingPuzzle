@@ -14,20 +14,13 @@
             <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
         <div id="container">
-            <div id="puzzle"></div>
-            <div id="toolbar" class="clearfix">
-                <button id="shuffle">shuffle</button>
-                <button id="background">Change Background</button>
-                <lable>Rows: </lable>
-                <button id="rows-dec">-</button>
-                <button id="rows-inc">+</button>
-                <lable>Cols: </lable>
-                <button id="cols-dec">-</button>
-                <button id="cols-inc">+</button>
-                <span>Steps: <span id="steps">0</span></span>
-            </div>
+            <h1>Sliding Puzzle</h1>
+            <menu class="clearfix">
+                <button id="new-game">New Game</button>
+            </menu>
+            <div id="puzzle" class="hidden"></div>
         </div>
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
         <script type="text/javascript" src="js/puzzle.js"></script>
         <script type="text/javascript" src="js/main.js"></script>
     </body>

@@ -1,108 +1,144 @@
 $(function () {
-    var MAX_ROW = 20, MAX_COL = 20;
+    'use strict';
 
-    var game = $('#puzzle').puzzle({image: 'url(img/gavle.jpg)',
-                                    spacing: 4,
-                                    rows: 4,
-                                    cols: 4});
+    // Constants
+    var ROWS = 4, COLS = 5;
 
-    click = function () {
-        this.steps();
-    }
+    var sliding = new SimpleSliding(ROWS, COLS),
+        puzzle = document.getElementById('puzzle');
 
-    timer = {
-        startTime: null,
+    sliding.render(puzzle, 4);
 
-        endTime: null,
+    $(sliding.squares).click(function () {
+        var id = $(this).data('id');
+        sliding.slide(id);
+        if (timer.started() && sliding.completed()) {
+            alert('Total time: ' + (timer.end() / 1000) + ' seconds');
+        }
+    });
 
+    $('#new-game').click(function () {
+        sliding.shuffle();
+        timer.start();
+    });
+
+    $(window).keydown(function (event) {
+        event.preventDefault();
+
+        var emptyPos = sliding.position[sliding.emptyID],
+            emptyRow = emptyPos[0],
+            emptyCol = emptyPos[1];
+
+        switch (event.which) {
+        case 37:            // left
+            console.log(emptyCol + 1 < sliding.cols, emptyCol, sliding.cols);
+            if (emptyCol + 1 < sliding.cols) {
+                sliding.slide([emptyRow, emptyCol + 1]);
+            }
+            break;
+        case 39:            // right
+            if (emptyCol - 1 >= 0) {
+                sliding.slide([emptyRow, emptyCol - 1]);
+            }
+            break;
+        case 38:            // up
+            if (emptyRow + 1 < sliding.rows) {
+                sliding.slide([emptyRow + 1, emptyCol]);
+            }
+            break;
+        case 40:            // down
+            if (emptyRow - 1 >= 0) {
+                sliding.slide([emptyRow - 1, emptyCol]);
+            }
+            break;
+        default:
+            break;
+        }
+    });
+
+    var timer = {
         start: function () {
-            this.startTime = new Date();
+            this.startTime = Date.now();
             return this.startTime;
         },
 
         end: function () {
-            this.endTime = new Date();
-            return this.endTime;
-        },
-
-        reset: function () {
+            var sofar = this.sofar();
             this.startTime = null;
-            this.endTime = null;
+            return sofar;
         },
 
-        totalSeconds: function () {
-            endTime = this.endTime || new Date();
-            if (this.startTime) {
-                return Math.floor((endTime - this.startTime)/1000);
-            } else {
-                return 0;
+        sofar: function () {
+            if (!this.started()) {
+                throw new Error('not started yet');
             }
+            return Math.floor(Date.now() - this.startTime);
+        },
+
+        started: function () {
+            return this.startTime != null;
         }
     };
 
-    complete = function () {
-        timer.end();
-        alert('Total time: ' + timer.totalSeconds() + ' seconds\n'
-              + 'Steps: ' + $('#steps').text());
-        game.unbind('click', click);
-        game.div.css({'background-color': '#222',
-                      'border-color': '#222'});
-    }
+    var img;
 
-    game.bind('shuffle', function () {
-        timer.start();
-        game.unbind('complete', complete).one('complete', complete);
-        game.unbind('click', click).bind('click', click);
-        game.div.css({'background-color': 'black',
-                      'border-color': 'black'});
-        $('#steps').text(0);
+    var loadImage = function (src) {
+        img = new Image();
+        $(img).on('load', function () {
+            if ($(puzzle).hasClass('hidden')) {
+                $(puzzle).removeClass('hidden');
+            }
+            adjustSize();
+            $(sliding.squares).css({'background-image': 'url(' + src + ')'});
+        });
+        img.src = src;
+    };
 
-    }).bind('step', function () {
-        $('#steps').text(parseInt($('#steps').text()) + 1);
+    var responsiveSize = function (width, height, viewportWidth, viewportHeight) {
+        var ratio = 1;
+        if (viewportHeight != null) {
+            ratio = viewportHeight / height;
+        }
+        if (viewportWidth != null && ratio * width > viewportWidth) {
+            ratio = viewportWidth / width;
+        }
+        var adjustedWidth = Math.min(width * ratio, width),
+            adjustedHeight = Math.min(height * ratio, height);
 
-    }).shuffle();
+        return [adjustedWidth, adjustedHeight];
+    };
 
-    $('#shuffle').click(function () {
-        game.shuffle();
-    });
+    var adjustSize = function () {
+        var width, height;
 
-    $('#background').click(function () {
-        if (game.image === 'url(img/gavle.jpg)') {
-            $('#puzzle').width(720).height(480);
-            game.render({image: 'url(img/lake.jpg)', spacing: 2});
+        if (img) {
+            width = img.width + puzzle.offsetWidth - puzzle.clientWidth;
+            height = img.height + puzzle.offsetHeight - puzzle.clientHeight;
         } else {
-            $('#puzzle').width(800).height(600);
-            game.render({image: 'url(img/gavle.jpg)', spacing: 4});
+            width = $(puzzle).parent().innerWidth();
+            height = (width * ROWS) / COLS;
         }
 
+        var adjustedSize = responsiveSize(width, height, $(puzzle).parent().innerWidth());
+        $(puzzle).outerHeight(adjustedSize[1]);
+        $(sliding.squares).css({
+            'background-size': puzzle.clientWidth + 'px ' + puzzle.clientHeight + 'px'
+        });
+        sliding.render();
+    };
 
+    $(window).resize(adjustSize);
+
+    // Choice 1:
+    $(sliding.squares).each(function () {
+        var id = $(this).data('id');
+        $(this).text(id + 1).css({'background-color': 'white',
+                                  'text-align': 'center'});
     });
 
-    $('#rows-inc').click(function () {
-        if (game.rows < MAX_ROW) {
-            game.render({rows: game.rows + 1});
-            game.shuffle();
-        }
-    });
+    $(puzzle).removeClass('hidden');
+    adjustSize();
 
-    $('#rows-dec').click(function () {
-        if (game.rows > 2) {
-            game.render({rows: game.rows - 1});
-            game.shuffle();
-        }
-    });
-
-    $('#cols-inc').click(function () {
-        if (game.cols < MAX_COL) {
-            game.render({cols: game.cols + 1});
-            game.shuffle();
-        }
-    });
-
-    $('#cols-dec').click(function () {
-        if (game.cols > 2) {
-            game.render({cols: game.cols - 1});
-            game.shuffle();
-        }
-    });
+    // Choice 2:
+    // loadImage('img/gavle.jpg');
 });
