@@ -159,11 +159,15 @@ class Sliding
         [row, col] = toPos.call(@, posid)
         [erow, ecol] = @position[@emptyID]
         if row == erow
-            handler?.call(@, @grid[row][c], @emptyID)
-            @swap([row, c], @emptyID) for c in [ecol..col]
+            startCol = ecol + (if ecol > col then -1 else 1)
+            for c in [startCol .. col]
+                handler?.call(@, @grid[row][c], @emptyID)
+                @swap([row, c], @emptyID)
         else if col == ecol
-            handler?.call(@, @grid[r][col], @emptyID)
-            @swap([r, col], @emptyID) for r in [erow..row]
+            startRow = erow + (if erow > row then -1 else 1)
+            for r in [startRow .. row]
+                handler?.call(@, @grid[r][col], @emptyID)
+                @swap([r, col], @emptyID)
         return @
 
     slidable: (posid) ->
