@@ -13,24 +13,25 @@ origin = (id, cols) ->
 
 
 class Sliding
-    # Count inversions of an array.
+    # Count inversions of a matrix.
     # It will be used to check if a situation is solvable.
-    _countInversions: (array, start, end) ->
+    _countInversions: (matrix, start, end) ->
         start = if start? then start else 0
-        end = if end? then end else array.length - 1
+        end = if end? then end else matrix.length - 1
         if start > end
             return [0, []]
         else if start == end
-            if isArray(array[start])
-                return @_countInversions(array[start])
+            if isArray(matrix[start])
+                # Go into the lower dimension
+                return @_countInversions(matrix[start])
             else
-                # skip emptyID
-                return if array[start] == @emptyID then [0, []] else [0, [array[start]]]
+                # Skip emptyID
+                return if matrix[start] == @emptyID then [0, []] else [0, [matrix[start]]]
 
         # Split
         middle = Math.floor(start + (end - start) / 2)
-        [leftCount, leftSortedArray] = @_countInversions(array, start, middle)
-        [rightCount, rightSortedArray] = @_countInversions(array, middle+1, end)
+        [leftCount, leftSortedArray] = @_countInversions(matrix, start, middle)
+        [rightCount, rightSortedArray] = @_countInversions(matrix, middle+1, end)
 
         l = 0
         r = 0
@@ -66,9 +67,9 @@ class Sliding
 
     constructor: (rows, cols, emptyPos) ->
         if not rows >= 1
-            throw RangeError('At least 1 row is required')
+            throw RangeError('require at least 1 row')
         if not cols >= 1
-            throw RangeError('At least 1 col is required')
+            throw RangeError('require at least 1 col')
 
         emptyPos = [
             if emptyPos and emptyPos[0]? then emptyPos[0] else rows - 1
@@ -76,9 +77,9 @@ class Sliding
         ]
 
         if not (0 <= emptyPos[0] < rows)
-            throw RangeError('Invalid empty row')
+            throw RangeError('invalid empty row')
         if not (0 <= emptyPos[1] < cols)
-            throw RangeError('Invalid empty col')
+            throw RangeError('invalid empty col')
 
         @rows = rows
         @cols = cols
@@ -99,14 +100,16 @@ class Sliding
         return @
 
     solvable: ->
-        [erow, _] = @position[@emptyID]
+        [emptyRow, _] = @position[@emptyID]
         [inversions, _] = @_countInversions(@grid)
-        return solvable(inversions, @rows, @cols, erow + 1)
+        return solvable(inversions, @rows, @cols, emptyRow + 1)
 
     completed: ->
         return @incompletions == 0
 
     shuffle: (handler) ->
+        # Fisher-Yates shuffle
+        # http://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
         for lastID in [@rows * @cols - 1 .. 0]
             if lastID == @emptyID
                 continue
@@ -116,8 +119,10 @@ class Sliding
             handler?.call(@, lastID, randID)
             @swap(lastID, randID)
 
+        # Swapping arbitrary 2 squares always changes the odd-even
+        # status of the number of inversions.
         if not @solvable()
-            console.assert @rows * @cols > 2, 'It is impossible to be unsolvable'
+            console.assert(@rows * @cols > 2, "impossible to be unsolvable for #{@rows}x#{@cols} grid")
             if @emptyID == 0
                 handler?.call(@, 1, 2)
                 @swap(1, 2)
@@ -159,14 +164,14 @@ class Sliding
         if not @slidable(posid)
             return @
         [row, col] = toPos.call(@, posid)
-        [erow, ecol] = @position[@emptyID]
-        if row == erow
-            startCol = ecol + (if ecol > col then -1 else 1)
+        [emptyRow, emptyCol] = @position[@emptyID]
+        if row == emptyRow
+            startCol = emptyCol + (if emptyCol > col then -1 else 1)
             for c in [startCol .. col]
                 handler?.call(@, @grid[row][c], @emptyID)
                 @swap([row, c], @emptyID)
-        else if col == ecol
-            startRow = erow + (if erow > row then -1 else 1)
+        else if col == emptyCol
+            startRow = emptyRow + (if emptyRow > row then -1 else 1)
             for r in [startRow .. row]
                 handler?.call(@, @grid[r][col], @emptyID)
                 @swap([r, col], @emptyID)
@@ -174,10 +179,10 @@ class Sliding
 
     slidable: (posid) ->
         [row, col] = toPos.call(@, posid)
-        [erow, ecol] = @position[@emptyID]
+        [emptyRow, emptyCol] = @position[@emptyID]
         return (0 <= row < @rows and 0 <= col < @cols) and
-            not (row == erow and col == ecol) and
-            (row == erow or col == ecol)
+            not (row == emptyRow and col == emptyCol) and
+            (row == emptyRow or col == emptyCol)
 
     mapPos: (f) ->
         results = []
@@ -244,8 +249,8 @@ class SimpleSliding
         style.top = @_getTop(row) + 'px'
         style.width = @_getWidth(col) + 'px'
         style.height = @_getHeight(row) + 'px'
-        [orow, ocol] = origin(id, @cols)
-        style.backgroundPosition = "#{ @_getBackgroundX(ocol, col) }px #{ @_getBackgroundY(orow, row) }px"
+        [originRow, originCol] = origin(id, @cols)
+        style.backgroundPosition = "#{ @_getBackgroundX(originCol, col) }px #{ @_getBackgroundY(originRow, row) }px"
 
         return @
 
@@ -284,7 +289,7 @@ class SimpleSliding
 
     slide: (posid) ->
         return base.prototype.slide.call(@, posid, (src, tar) =>
-            console.assert(tar == @emptyID, 'Target must be the empty square')
+            console.assert(tar == @emptyID, 'expect target to be empty square')
             @_putSquare(src, tar))
 
 

@@ -22,26 +22,26 @@
   Sliding = (function() {
     var solvable;
 
-    Sliding.prototype._countInversions = function(array, start, end) {
+    Sliding.prototype._countInversions = function(matrix, start, end) {
       var count, l, leftCount, leftSortedArray, middle, r, rightCount, rightSortedArray, sortedArray, _ref, _ref1;
       start = start != null ? start : 0;
-      end = end != null ? end : array.length - 1;
+      end = end != null ? end : matrix.length - 1;
       if (start > end) {
         return [0, []];
       } else if (start === end) {
-        if (isArray(array[start])) {
-          return this._countInversions(array[start]);
+        if (isArray(matrix[start])) {
+          return this._countInversions(matrix[start]);
         } else {
-          if (array[start] === this.emptyID) {
+          if (matrix[start] === this.emptyID) {
             return [0, []];
           } else {
-            return [0, [array[start]]];
+            return [0, [matrix[start]]];
           }
         }
       }
       middle = Math.floor(start + (end - start) / 2);
-      _ref = this._countInversions(array, start, middle), leftCount = _ref[0], leftSortedArray = _ref[1];
-      _ref1 = this._countInversions(array, middle + 1, end), rightCount = _ref1[0], rightSortedArray = _ref1[1];
+      _ref = this._countInversions(matrix, start, middle), leftCount = _ref[0], leftSortedArray = _ref[1];
+      _ref1 = this._countInversions(matrix, middle + 1, end), rightCount = _ref1[0], rightSortedArray = _ref1[1];
       l = 0;
       r = 0;
       count = 0;
@@ -74,17 +74,17 @@
     function Sliding(rows, cols, emptyPos) {
       var col, id, row, _i, _j, _ref, _ref1, _ref2, _ref3;
       if (!rows >= 1) {
-        throw RangeError('At least 1 row is required');
+        throw RangeError('require at least 1 row');
       }
       if (!cols >= 1) {
-        throw RangeError('At least 1 col is required');
+        throw RangeError('require at least 1 col');
       }
       emptyPos = [emptyPos && (emptyPos[0] != null) ? emptyPos[0] : rows - 1, emptyPos && (emptyPos[1] != null) ? emptyPos[1] : cols - 1];
       if (!((0 <= (_ref = emptyPos[0]) && _ref < rows))) {
-        throw RangeError('Invalid empty row');
+        throw RangeError('invalid empty row');
       }
       if (!((0 <= (_ref1 = emptyPos[1]) && _ref1 < cols))) {
-        throw RangeError('Invalid empty col');
+        throw RangeError('invalid empty col');
       }
       this.rows = rows;
       this.cols = cols;
@@ -107,10 +107,10 @@
     }
 
     Sliding.prototype.solvable = function() {
-      var erow, inversions, _, _ref, _ref1;
-      _ref = this.position[this.emptyID], erow = _ref[0], _ = _ref[1];
+      var emptyRow, inversions, _, _ref, _ref1;
+      _ref = this.position[this.emptyID], emptyRow = _ref[0], _ = _ref[1];
       _ref1 = this._countInversions(this.grid), inversions = _ref1[0], _ = _ref1[1];
-      return solvable(inversions, this.rows, this.cols, erow + 1);
+      return solvable(inversions, this.rows, this.cols, emptyRow + 1);
     };
 
     Sliding.prototype.completed = function() {
@@ -133,7 +133,7 @@
         this.swap(lastID, randID);
       }
       if (!this.solvable()) {
-        console.assert(this.rows * this.cols > 2, 'It is impossible to be unsolvable');
+        console.assert(this.rows * this.cols > 2, "impossible to be unsolvable for " + this.rows + "x" + this.cols + " grid");
         if (this.emptyID === 0) {
           if (handler != null) {
             handler.call(this, 1, 2);
@@ -188,22 +188,22 @@
     };
 
     Sliding.prototype.slide = function(posid, handler) {
-      var c, col, ecol, erow, r, row, startCol, startRow, _i, _j, _ref, _ref1;
+      var c, col, emptyCol, emptyRow, r, row, startCol, startRow, _i, _j, _ref, _ref1;
       if (!this.slidable(posid)) {
         return this;
       }
       _ref = toPos.call(this, posid), row = _ref[0], col = _ref[1];
-      _ref1 = this.position[this.emptyID], erow = _ref1[0], ecol = _ref1[1];
-      if (row === erow) {
-        startCol = ecol + (ecol > col ? -1 : 1);
+      _ref1 = this.position[this.emptyID], emptyRow = _ref1[0], emptyCol = _ref1[1];
+      if (row === emptyRow) {
+        startCol = emptyCol + (emptyCol > col ? -1 : 1);
         for (c = _i = startCol; startCol <= col ? _i <= col : _i >= col; c = startCol <= col ? ++_i : --_i) {
           if (handler != null) {
             handler.call(this, this.grid[row][c], this.emptyID);
           }
           this.swap([row, c], this.emptyID);
         }
-      } else if (col === ecol) {
-        startRow = erow + (erow > row ? -1 : 1);
+      } else if (col === emptyCol) {
+        startRow = emptyRow + (emptyRow > row ? -1 : 1);
         for (r = _j = startRow; startRow <= row ? _j <= row : _j >= row; r = startRow <= row ? ++_j : --_j) {
           if (handler != null) {
             handler.call(this, this.grid[r][col], this.emptyID);
@@ -215,10 +215,10 @@
     };
 
     Sliding.prototype.slidable = function(posid) {
-      var col, ecol, erow, row, _ref, _ref1;
+      var col, emptyCol, emptyRow, row, _ref, _ref1;
       _ref = toPos.call(this, posid), row = _ref[0], col = _ref[1];
-      _ref1 = this.position[this.emptyID], erow = _ref1[0], ecol = _ref1[1];
-      return ((0 <= row && row < this.rows) && (0 <= col && col < this.cols)) && !(row === erow && col === ecol) && (row === erow || col === ecol);
+      _ref1 = this.position[this.emptyID], emptyRow = _ref1[0], emptyCol = _ref1[1];
+      return ((0 <= row && row < this.rows) && (0 <= col && col < this.cols)) && !(row === emptyRow && col === emptyCol) && (row === emptyRow || col === emptyCol);
     };
 
     Sliding.prototype.mapPos = function(f) {
@@ -319,7 +319,7 @@
     };
 
     SimpleSliding.prototype._putSquare = function(id, posid) {
-      var col, ocol, orow, row, style, _ref, _ref1;
+      var col, originCol, originRow, row, style, _ref, _ref1;
       posid = posid != null ? posid : id;
       _ref = toPos.call(this, posid), row = _ref[0], col = _ref[1];
       style = this.squares[id].style;
@@ -327,8 +327,8 @@
       style.top = this._getTop(row) + 'px';
       style.width = this._getWidth(col) + 'px';
       style.height = this._getHeight(row) + 'px';
-      _ref1 = origin(id, this.cols), orow = _ref1[0], ocol = _ref1[1];
-      style.backgroundPosition = "" + (this._getBackgroundX(ocol, col)) + "px " + (this._getBackgroundY(orow, row)) + "px";
+      _ref1 = origin(id, this.cols), originRow = _ref1[0], originCol = _ref1[1];
+      style.backgroundPosition = "" + (this._getBackgroundX(originCol, col)) + "px " + (this._getBackgroundY(originRow, row)) + "px";
       return this;
     };
 
@@ -381,7 +381,7 @@
     SimpleSliding.prototype.slide = function(posid) {
       return base.prototype.slide.call(this, posid, (function(_this) {
         return function(src, tar) {
-          console.assert(tar === _this.emptyID, 'Target must be the empty square');
+          console.assert(tar === _this.emptyID, 'expect target to be empty square');
           return _this._putSquare(src, tar);
         };
       })(this));
