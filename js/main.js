@@ -31,7 +31,6 @@ $(function () {
 
         switch (event.which) {
         case 37:            // left
-            console.log(emptyCol + 1 < sliding.cols, emptyCol, sliding.cols);
             if (emptyCol + 1 < sliding.cols) {
                 sliding.slide([emptyRow, emptyCol + 1]);
             }
