@@ -1,75 +1,92 @@
 ## Sliding Puzzle
 
 A [sliding puzzle](http://en.wikipedia.org/wiki/Sliding_puzzle) game
-written in CoffeeScript. It uses jQuery and provides its functionality
-as a jQuery plugin.
-
-View [Demo](http://ptpt.github.com/SlidingPuzzle/).
+written in CoffeeScript. View [Demo](http://ptpt.github.com/SlidingPuzzle/).
 
 ## How to use
 
-**1**. Copy `puzzle.js` to your site folder.
+**1**. Copy [puzzle.js](http://ptpt.github.com/SlidingPuzzle/js/puzzle.js) to your site folder.
 
-**2**. Add a `div` element to your HTML file. For example:
+**2**. HTML setup.
 
+Add a container element to your HTML file. For example:
 ````html
-    <div id="puzzle">puzzle shows here</div>
+<div id="puzzle" style="width: 100px; height: 100px">puzzle shows here</div>
 ````
 
-**3**. Include jQuery and `puzzle.js` in your HTML file.
-
+Include `puzzle.js` in your HTML file:
 ````html
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-    <script type="text/javascript" src="puzzle.js"></script>
+<script type="text/javascript" src="puzzle.js"></script>
 ````
 
-**4**. Choose a nice picture as the background image, then initialize the
-   game.
+**3**. Initialize the game.
 
 ````javascript
-    var game = $('#puzzle').puzzle({image: 'url(PATH/TO/YOUR/IMG)'});
+var sliding = new SimpleSliding(3, 3),
+    container = document.getElementbyid('puzzle');
+
+sliding.render(container, 2);
+sliding.shuffle();
 ````
+
+**4**. Show numbers, or image background.
+```javascript
+$(sliding.squares).each(function () {
+    var id = $(this).data('id');
+    $(this).text(id + 1);
+});
+```
+
+You can also specify the background image, which looks nicer than showing numbers:
+```javascript
+$(sliding.squares).css({'background-image': 'url(PATH/TO/GAME-BACKGROUND.jpg)'});
+```
 
 **5**. Let the game know how to move, and how to react when you win.
-
 ````javascript
-    game.bind('click', function () {
-        this.steps();
-    }).bind('complete', function () {
+$(sliding.squares).click(function () {
+    var id = $(this).data('id');
+    sliding.slide(id);
+    if (sliding.completed()) {
         alert('Well done!');
-    }).shuffle();
+        sliding.shuffle();
+    }
+});
 ````
+
 
 ## API
 
-````coffeescript
-    class Square(id, puzzle, row, col)
-        redraw()
-        movable()
-        swap(row, col, callback)
-        step(callback)
-        steps(callback)
-        bind(event, handler, one=false)
-        unbind(event, handler)
-        trigger(event)
-        one(event, handler)
-        reset(callback)
+```coffeescript
+class SimpleSliding
+    # initialize a game with the number of rows and cols
+    constructor(rows, cols)
 
-    class Puzzle(div, options={})
-        rebuild()
-        render(options={})
-        solvable()
-        shuffle(callback)
-        eachSquare(callback)
-        mapSquare(callback)
-        complete()
-        empty(row, col)
-        bind(event, handler, one=false)
-        unbind(event, handler)
-        one(event, handler)
-        trigger(event)
-        reset(callback)
-````
+    # render the game on element with specified spacing between squares
+    render(element, spacing)
+    # change spacing
+    render(null, spacing)
+    # rerender the game on current element
+    render()
+
+    # test if current game state is solvable
+    solvable()
+
+    # test if current game state is completed
+    completed()
+
+    # test if the square is slidable (movable)
+    slidable(squareID) or slidable([row, col])
+
+    # shuffle all squares (solvability is guaranteed after shuffling)
+    shuffle(callback)
+
+    # slide a square
+    slide(squareID) or slide([row, col])
+
+    # swap arbitrary two squares
+    swap(squareID1, squareID2) or swap([row1, col1], [row2, col2])
+```
 
 ## History
 
@@ -78,6 +95,11 @@ This was originally part of our
 Software Development course in 2011.
 
 In March 2013, it was rewritten in CoffeeScript.
+
+In December 2014, it was rewritten with following improvements:
+1. simplification: shorter code, easier usage
+2. split game logic and UI logic
+3. remove jQuery dependency
 
 ## License
 
