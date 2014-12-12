@@ -97,6 +97,7 @@ Software Development course in 2011.
 In March 2013, it was rewritten in CoffeeScript.
 
 In December 2014, it was rewritten with following improvements:
+
 1. simplification: shorter code, easier usage
 2. split game logic and UI logic
 3. remove jQuery dependency
