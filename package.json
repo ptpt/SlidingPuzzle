@@ -1,0 +1,29 @@
+{
+  "name": "slidingPuzzle",
+  "version": "0.3.0",
+  "description": "A sliding puzzle game written in CoffeeScript",
+  "main": "js/puzzle.js",
+  "dependencies": {
+    "chai": "^1.10.0",
+    "underscore": "^1.7.0"
+  },
+  "devDependencies": {
+    "mocha": "^2.0.1"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ptpt/SlidingPuzzle.git"
+  },
+  "keywords": [
+    "game"
+  ],
+  "author": "Tao Peng",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ptpt/SlidingPuzzle/issues"
+  },
+  "homepage": "https://github.com/ptpt/SlidingPuzzle"
+}
