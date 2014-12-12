@@ -131,6 +131,8 @@ class Sliding
         return @
 
     swap: (p1, p2) ->
+        if p1 == p2
+            return @
         [y1, x1] = toPos.call(@, p1)
         [y2, x2] = toPos.call(@, p2)
         if x1 == x2 and y1 == y2
