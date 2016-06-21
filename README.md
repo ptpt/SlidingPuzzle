@@ -29,7 +29,7 @@ sliding.render(container, 2);
 sliding.shuffle();
 ````
 
-**4**. Show numbers, or image background.
+**4**. Show the number on each square.
 ```javascript
 $(sliding.squares).each(function () {
     var id = $(this).data('id');
@@ -37,7 +37,7 @@ $(sliding.squares).each(function () {
 });
 ```
 
-You can also specify the background image, which looks nicer than showing numbers:
+Or specify the background image, which looks better than numbers:
 ```javascript
 $(sliding.squares).css({'background-image': 'url(PATH/TO/GAME-BACKGROUND.jpg)'});
 ```
@@ -49,7 +49,7 @@ $(sliding.squares).click(function () {
     sliding.slide(id);
     if (sliding.completed()) {
         alert('Well done!');
-        sliding.shuffle();
+        sliding.shuffle(); // restart again
     }
 });
 ````
