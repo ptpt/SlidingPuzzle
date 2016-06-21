@@ -5,55 +5,54 @@ written in CoffeeScript. View [Demo](http://ptpt.github.com/SlidingPuzzle/).
 
 ## How to use
 
-**1**. Copy [puzzle.js](http://ptpt.github.com/SlidingPuzzle/js/puzzle.js) to your site folder.
+1. Copy [puzzle.js](http://ptpt.github.com/SlidingPuzzle/js/puzzle.js) to your site folder.
 
-**2**. HTML setup.
+2. HTML setup.
 
-Add a container element to your HTML file. For example:
-````html
-<div id="puzzle" style="width: 100px; height: 100px">puzzle shows here</div>
-````
+    Add a container element to your HTML file. For example:
+    ````html
+    <div id="puzzle" style="width: 100px; height: 100px">puzzle shows here</div>
+    ````
 
-Include `puzzle.js` in your HTML file:
-````html
-<script type="text/javascript" src="puzzle.js"></script>
-````
+    Include `puzzle.js` in your HTML file:
+    ````html
+    <script type="text/javascript" src="puzzle.js"></script>
+    ````
 
-**3**. Initialize the game.
+3. Initialize the game.
 
-````javascript
-var sliding = new SimpleSliding(3, 3),
-    container = document.getElementbyid('puzzle');
+    ````javascript
+    var sliding = new SimpleSliding(3, 3),
+        container = document.getElementbyid('puzzle');
+    
+    sliding.render(container, 2);
+    sliding.shuffle();
+    ````
 
-sliding.render(container, 2);
-sliding.shuffle();
-````
+4. Show the number on each square.
+    ```javascript
+    $(sliding.squares).each(function () {
+        var id = $(this).data('id');
+        $(this).text(id + 1);
+    });
+    ```
+    
+    Or specify the background image, which looks better than numbers:
+    ```javascript
+    $(sliding.squares).css({'background-image': 'url(PATH/TO/GAME-BACKGROUND.jpg)'});
+    ```
 
-**4**. Show the number on each square.
-```javascript
-$(sliding.squares).each(function () {
-    var id = $(this).data('id');
-    $(this).text(id + 1);
-});
-```
-
-Or specify the background image, which looks better than numbers:
-```javascript
-$(sliding.squares).css({'background-image': 'url(PATH/TO/GAME-BACKGROUND.jpg)'});
-```
-
-**5**. Let the game know how to move, and how to react when you win.
-````javascript
-$(sliding.squares).click(function () {
-    var id = $(this).data('id');
-    sliding.slide(id);
-    if (sliding.completed()) {
-        alert('Well done!');
-        sliding.shuffle(); // restart again
-    }
-});
-````
-
+5. Let the game know how to move, and how to react when you win.
+    ````javascript
+    $(sliding.squares).click(function () {
+        var id = $(this).data('id');
+        sliding.slide(id);
+        if (sliding.completed()) {
+            alert('Well done!');
+            sliding.shuffle(); // Restart again
+        }
+    });
+    ````
 
 ## API
 
@@ -84,7 +83,7 @@ class SimpleSliding
     # slide a square
     slide(squareID) or slide([row, col])
 
-    # swap arbitrary two squares
+    # swap arbitrary two squares (after swap you have to check solvability yourself)
     swap(squareID1, squareID2) or swap([row1, col1], [row2, col2])
 ```
 
