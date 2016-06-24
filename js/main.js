@@ -23,29 +23,31 @@ $(function () {
     });
 
     $(window).keydown(function (event) {
-        event.preventDefault();
-
         var emptyPos = sliding.position[sliding.emptyID],
             emptyRow = emptyPos[0],
             emptyCol = emptyPos[1];
 
         switch (event.which) {
         case 37:            // left
+            event.preventDefault();
             if (emptyCol + 1 < sliding.cols) {
                 sliding.slide([emptyRow, emptyCol + 1]);
             }
             break;
         case 39:            // right
+            event.preventDefault();
             if (emptyCol - 1 >= 0) {
                 sliding.slide([emptyRow, emptyCol - 1]);
             }
             break;
         case 38:            // up
+            event.preventDefault();
             if (emptyRow + 1 < sliding.rows) {
                 sliding.slide([emptyRow + 1, emptyCol]);
             }
             break;
         case 40:            // down
+            event.preventDefault();
             if (emptyRow - 1 >= 0) {
                 sliding.slide([emptyRow - 1, emptyCol]);
             }
