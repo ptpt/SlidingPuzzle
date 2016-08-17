@@ -24,7 +24,7 @@ written in CoffeeScript. View [Demo](http://ptpt.github.com/SlidingPuzzle/).
     ````javascript
     var sliding = new SimpleSliding(3, 3),
         container = document.getElementbyid('puzzle');
-    
+
     sliding.render(container, 2);
     sliding.shuffle();
     ````
@@ -36,7 +36,7 @@ written in CoffeeScript. View [Demo](http://ptpt.github.com/SlidingPuzzle/).
         $(this).text(id + 1);
     });
     ```
-    
+
     Or specify the background image, which looks better than numbers:
     ```javascript
     $(sliding.squares).css({'background-image': 'url(PATH/TO/GAME-BACKGROUND.jpg)'});
@@ -61,10 +61,9 @@ class SimpleSliding
     # initialize a game with the number of rows and cols
     constructor(rows, cols)
 
-    # render the game on element with specified spacing between squares
+    # render the game on the element with specified spacing between squares
     render(element, spacing)
-    # change spacing
-    render(null, spacing)
+
     # rerender the game on current element
     render()
 
