@@ -1,11 +1,11 @@
 ## Sliding Puzzle
 
 A [sliding puzzle](http://en.wikipedia.org/wiki/Sliding_puzzle) game
-written in CoffeeScript. View [Demo](http://ptpt.github.com/SlidingPuzzle/).
+written in CoffeeScript. View [Demo](https://ptpt.github.io/SlidingPuzzle/).
 
 ## How to use
 
-1. Copy [puzzle.js](http://ptpt.github.com/SlidingPuzzle/js/puzzle.js) to your site folder.
+1. Copy [puzzle.js](https://ptpt.github.io/SlidingPuzzle/js/puzzle.js) to your site folder.
 
 2. HTML setup.
 
